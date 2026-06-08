@@ -24,11 +24,17 @@ function App(){
   useEffect(()=>{ supabase.auth.getSession().then(({data})=>{setSession(data.session);setLoading(false)}); const {data}=supabase.auth.onAuthStateChange((_e,s)=>setSession(s)); return()=>data.subscription.unsubscribe() },[])
   useEffect(()=>{ if(!session)return; loadAll(); const ch=supabase.channel('sigap-realtime').on('postgres_changes',{event:'*',schema:'public',table:'pegawai'},loadPegawai).on('postgres_changes',{event:'*',schema:'public',table:'riwayat_perubahan'},loadHistory).subscribe(); return()=>supabase.removeChannel(ch) },[session])
 
-  async function loadAll(){ setLoading(true); await Promise.all([loadProfile(),loadPegawai(),loadHistory()]); setLoading(false) }
+  async function loadAll(){ setLoading(true); await Promise.all([loadProfile(),loadPegawai(),loadHistory(),loadUsers()]); setLoading(false) }
   async function loadProfile(){ const {data}=await supabase.from('profiles').select('*').eq('id',session.user.id).single(); setProfile(data) }
   async function loadPegawai(){ const {data}=await supabase.from('pegawai').select('*').order('urutan_pangkat',{ascending:false}); setPegawai(data||[]) }
   async function loadHistory(){ const {data}=await supabase.from('riwayat_perubahan').select('*').order('created_at',{ascending:false}).limit(100); setHistory(data||[]) }
-
+async function loadUsers(){
+  const {data}=await supabase
+    .from('profiles')
+    .select('*')
+    .order('nama')
+  setUsers(data||[])
+}
   const canEdit = profile?.role === 'super_admin' || profile?.role === 'admin_bagian'
   const filtered = useMemo(()=>pegawai.filter(p=>`${p.nama} ${p.nip_nrp} ${p.pangkat_gol} ${p.jabatan} ${p.unit_kerja}`.toLowerCase().includes(q.toLowerCase()) && (!unit||p.unit_kerja===unit) && (!status||p.status===status) && (!jenis||p.jenis===jenis)),[pegawai,q,unit,status,jenis])
   const stats = { total:pegawai.length, jaksa:pegawai.filter(p=>p.jenis==='Jaksa').length, tu:pegawai.filter(p=>p.jenis==='TU').length, pensiun:pegawai.filter(p=>p.status==='Pensiun').length, mutasi:pegawai.filter(p=>p.status==='Mutasi').length, pangkat:pegawai.filter(p=>p.status==='Naik Pangkat').length }
@@ -64,3 +70,4 @@ function History({items}){if(!items.length)return <p className="note">Belum ada 
 
 createRoot(document.getElementById('root')).render(<App/>)
 // sort pegawai by urutan pangkat
+// add load users function
