@@ -58,4 +58,4 @@ function Title({title,sub}){return <div className="panelTitle"><h3>{title}</h3><
 function History({items}){if(!items.length)return <p className="note">Belum ada riwayat perubahan.</p>;return <div className="historyList">{items.map(h=><div className="historyItem" key={h.id}><div className="historyIcon">↻</div><div><strong>{h.tipe}</strong><small>{new Date(h.created_at).toLocaleString('id-ID')} · {h.admin_nama||'-'}</small><p>{h.nilai_lama||'-'} → {h.nilai_baru||'-'} {h.catatan?`· ${h.catatan}`:''}</p></div></div>)}</div>}
 
 createRoot(document.getElementById('root')).render(<App/>)
-sort pegawai by urutan pangkat
+// sort pegawai by urutan pangkat
