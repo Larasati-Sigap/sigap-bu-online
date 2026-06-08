@@ -26,7 +26,7 @@ function App(){
 
   async function loadAll(){ setLoading(true); await Promise.all([loadProfile(),loadPegawai(),loadHistory()]); setLoading(false) }
   async function loadProfile(){ const {data}=await supabase.from('profiles').select('*').eq('id',session.user.id).single(); setProfile(data) }
-  async function loadPegawai(){ const {data}=await supabase.from('pegawai').select('*').order('nama'); setPegawai(data||[]) }
+  async function loadPegawai(){ const {data}=await supabase.from('pegawai').select('*').order('urutan_pangkat',{ascending:false}); setPegawai(data||[]) }
   async function loadHistory(){ const {data}=await supabase.from('riwayat_perubahan').select('*').order('created_at',{ascending:false}).limit(100); setHistory(data||[]) }
 
   const canEdit = profile?.role === 'super_admin' || profile?.role === 'admin_bagian'
@@ -58,3 +58,4 @@ function Title({title,sub}){return <div className="panelTitle"><h3>{title}</h3><
 function History({items}){if(!items.length)return <p className="note">Belum ada riwayat perubahan.</p>;return <div className="historyList">{items.map(h=><div className="historyItem" key={h.id}><div className="historyIcon">↻</div><div><strong>{h.tipe}</strong><small>{new Date(h.created_at).toLocaleString('id-ID')} · {h.admin_nama||'-'}</small><p>{h.nilai_lama||'-'} → {h.nilai_baru||'-'} {h.catatan?`· ${h.catatan}`:''}</p></div></div>)}</div>}
 
 createRoot(document.getElementById('root')).render(<App/>)
+sort pegawai by rank
