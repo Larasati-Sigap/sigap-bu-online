@@ -56,10 +56,43 @@ async function loadUsers(){
   {active==='update'&&<section className="view"><article className="panel"><Title title="Update Naik Pangkat / Mutasi / Pensiun" sub="Setiap perubahan masuk audit trail."/><form className="updateGrid" onSubmit={quickUpdate}><label>Pilih Pegawai<select value={quick.pegawai_id} onChange={e=>setQuick({...quick,pegawai_id:e.target.value})} required><option value="">Pilih pegawai</option>{pegawai.map(p=><option value={p.id} key={p.id}>{p.nama} — {p.jabatan}</option>)}</select></label><label>Jenis Update<select value={quick.tipe} onChange={e=>setQuick({...quick,tipe:e.target.value})}><option>Naik Pangkat</option><option>Mutasi</option><option>Pensiun</option><option>Aktif</option></select></label><label>Pangkat/Gol Baru<input value={quick.pangkat_gol} onChange={e=>setQuick({...quick,pangkat_gol:e.target.value})}/></label><label>Unit Baru<select value={quick.unit_kerja} onChange={e=>setQuick({...quick,unit_kerja:e.target.value})}>{units.map(u=><option key={u}>{u}</option>)}</select></label><label>Tanggal/TMT<input type="date" value={quick.tanggal} onChange={e=>setQuick({...quick,tanggal:e.target.value})}/></label><label className="fullRow">Catatan<textarea value={quick.catatan} onChange={e=>setQuick({...quick,catatan:e.target.value})}/></label><button className="btn primary fullRow"><Save size={16}/>Simpan Update</button></form></article></section>}
   {active==='riwayat'&&<section className="view"><article className="panel"><Title title="Audit Trail" sub="Siapa mengubah, kapan, dan apa yang berubah."/><History items={history}/></article></section>}
   {active==='backup'&&<section className="view"><article className="panel"><Title title="Backup & Export" sub="Export data dari Supabase."/><button className="btn primary" onClick={exportCsv}><Download size={16}/>Download CSV</button><p className="note">Import awal memakai SQL seed. Setelah online, update dilakukan langsung di aplikasi.</p></article></section>}</main>
- {active==='users'&&<section className="view">
-<article className="panel">
-<Title title="Manajemen User" sub="Kelola akun dan role pengguna"/>
-</article>
+{active==='users'&&<section className="view">
+  <article className="panel">
+    <Title
+      title="Manajemen User"
+      sub="Kelola akun dan role pengguna"
+    />
+
+    <div className="tableWrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Nama</th>
+            <th>Role</th>
+            <th>Unit Kerja</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          {users.map(u=>(
+            <tr key={u.id}>
+              <td>{u.nama}</td>
+              <td>
+                <span className="badge">
+                  {u.role}
+                </span>
+              </td>
+              <td>
+                {u.unit_kerja || 'Semua Unit'}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+
+      </table>
+    </div>
+
+  </article>
 </section>}
     {modal&&<div className="modalBackdrop"><form className="modal" onSubmit={savePegawai}><div className="modalHead"><div><p className="eyebrow blue">Form Pegawai</p><h3>{editing?'Edit Pegawai':'Tambah Pegawai'}</h3></div><button type="button" className="xBtn" onClick={()=>setModal(false)}>×</button></div><div className="formGrid">{['nama','nip_nrp','pangkat_gol','jabatan','sub_unit'].map(k=><label key={k}>{k.replaceAll('_',' ').toUpperCase()}<input value={form[k]||''} onChange={e=>setForm({...form,[k]:e.target.value})} required={k==='nama'||k==='nip_nrp'}/></label>)}<label>Bagian<select value={form.unit_kerja} onChange={e=>setForm({...form,unit_kerja:e.target.value})}>{units.map(u=><option key={u}>{u}</option>)}</select></label><label>Jenis<select value={form.jenis} onChange={e=>setForm({...form,jenis:e.target.value})}><option>Jaksa</option><option>TU</option></select></label><label>Status<select value={form.status} onChange={e=>setForm({...form,status:e.target.value})}><option>Aktif</option><option>Naik Pangkat</option><option>Mutasi</option><option>Pensiun</option></select></label><label>TMT Pangkat<input type="date" value={form.tmt_pangkat||''} onChange={e=>setForm({...form,tmt_pangkat:e.target.value})}/></label><label>TMT Jabatan<input type="date" value={form.tmt_jabatan||''} onChange={e=>setForm({...form,tmt_jabatan:e.target.value})}/></label><label>Tanggal Pensiun<input type="date" value={form.tanggal_pensiun||''} onChange={e=>setForm({...form,tanggal_pensiun:e.target.value})}/></label><label className="fullRow">Keterangan<textarea value={form.keterangan||''} onChange={e=>setForm({...form,keterangan:e.target.value})}/></label></div><div className="modalActions"><button type="button" className="btn outline" onClick={()=>setModal(false)}>Batal</button><button className="btn primary"><Save size={16}/>Simpan</button></div></form></div>}</div>
 }
@@ -75,3 +108,4 @@ createRoot(document.getElementById('root')).render(<App/>)
 // tambah menu manajemen user
 // fix menu error
 // tambah menu manajemen user
+// add user management page
