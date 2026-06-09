@@ -56,7 +56,7 @@ async function loadUsers(){
   {active==='update'&&<section className="view"><article className="panel"><Title title="Update Naik Pangkat / Mutasi / Pensiun" sub="Setiap perubahan masuk audit trail."/><form className="updateGrid" onSubmit={quickUpdate}><label>Pilih Pegawai<select value={quick.pegawai_id} onChange={e=>setQuick({...quick,pegawai_id:e.target.value})} required><option value="">Pilih pegawai</option>{pegawai.map(p=><option value={p.id} key={p.id}>{p.nama} — {p.jabatan}</option>)}</select></label><label>Jenis Update<select value={quick.tipe} onChange={e=>setQuick({...quick,tipe:e.target.value})}><option>Naik Pangkat</option><option>Mutasi</option><option>Pensiun</option><option>Aktif</option></select></label><label>Pangkat/Gol Baru<input value={quick.pangkat_gol} onChange={e=>setQuick({...quick,pangkat_gol:e.target.value})}/></label><label>Unit Baru<select value={quick.unit_kerja} onChange={e=>setQuick({...quick,unit_kerja:e.target.value})}>{units.map(u=><option key={u}>{u}</option>)}</select></label><label>Tanggal/TMT<input type="date" value={quick.tanggal} onChange={e=>setQuick({...quick,tanggal:e.target.value})}/></label><label className="fullRow">Catatan<textarea value={quick.catatan} onChange={e=>setQuick({...quick,catatan:e.target.value})}/></label><button className="btn primary fullRow"><Save size={16}/>Simpan Update</button></form></article></section>}
   {active==='riwayat'&&<section className="view"><article className="panel"><Title title="Audit Trail" sub="Siapa mengubah, kapan, dan apa yang berubah."/><History items={history}/></article></section>}
   {active==='backup'&&<section className="view"><article className="panel"><Title title="Backup & Export" sub="Export data dari Supabase."/><button className="btn primary" onClick={exportCsv}><Download size={16}/>Download CSV</button><p className="note">Import awal memakai SQL seed. Setelah online, update dilakukan langsung di aplikasi.</p></article></section>}</main>
-{active==='users'&&<section className="view">
+  {active==='users'&&<section className="view usersView">
   <article className="panel">
     <Title
       title="Manajemen User"
@@ -112,3 +112,4 @@ createRoot(document.getElementById('root')).render(<App/>)
 // tambah halaman Manajemen User
 // Fix users title
 // load users data
+// Fix user management section layout
