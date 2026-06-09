@@ -63,51 +63,230 @@ async function loadUsers(){
 
   if(loading)return <div className="loading">Memuat SIGAP-BU...</div>
   if(!session)return <Login/>
-  return <div className="app"><aside className="sidebar"><div className="brand"><div className="brandLogo">⚖</div><div><strong>SIGAP-BU</strong><span>Online v3.0</span></div></div><div className="userCard"><div className="avatar">{initials(profile?.nama||session.user.email)}</div><div><strong>{profile?.nama||session.user.email}</strong><span>{profile?.role||'viewer'} · {profile?.unit_kerja||'Semua Unit'}</span></div></div><p className="navTitle">NAVIGATION</p>{[['dashboard',Activity,'Dashboard'],['pegawai',Users,'Data Pegawai'],['update',RotateCcw,'Update Pegawai'],['riwayat',ClipboardList,'Audit Trail'],['backup',Database,'Backup'],['users',Users,'Manajemen User']].filter(([key])=>ACCESS[key]).map(([key,Icon,label])=><button key={key} className={`navItem ${active===key?'active':''}`} onClick={()=>setActive(key)}><Icon size={18}/>{label}</button>)}<button className="btn outline logout" onClick={()=>supabase.auth.signOut()}><LogOut size={16}/>Keluar</button></aside><main className="main"><header className="hero"><div><p className="breadcrumb">SIGAP-BU › {active}</p><h2>{active==='dashboard'?'Dashboard SIGAP-BU':active==='pegawai'?'Data Pegawai':active==='update'?'Update Pegawai':active==='riwayat'?'Audit Trail':active==='users'?'Manajemen User':'Backup & Export'}</h2><p>Data tersimpan di Supabase dan sinkron untuk seluruh user.</p></div>{isSuperAdmin&&<div className="heroActions"><button className="btn glass" onClick={exportCsv}><Download size={16}/>Export CSV</button>{isSuperAdmin&&<button className="btn gold" onClick={openNew}><Plus size={16}/>Tambah Pegawai</button>}</div>}<Download size={16}/>Export CSV</button>{isSuperAdmin&&<button className="btn gold" onClick={openNew}><Plus size={16}/>Tambah Pegawai</button>}</div></header>
-  {active==='dashboard'&&<section className="view"><div className="kpiGrid"><Kpi icon={<Users/>} label="Total Pegawai" value={stats.total}/><Kpi icon={<Shield/>} label="Jaksa" value={stats.jaksa}/><Kpi icon={<ClipboardList/>} label="Tata Usaha" value={stats.tu}/><Kpi icon={<Database/>} label="Pensiun" value={stats.pensiun}/></div><div className="contentGrid"><article className="panel"><Title title="Distribusi Pegawai per Bagian" sub="Komposisi dari database pusat."/><div className="bars">{unitCounts.map(([u,c])=><div className="barRow" key={u}><strong>{u}</strong><div className="barTrack"><div className="barFill" style={{width:`${(c/Math.max(...unitCounts.map(x=>x[1]),1))*100}%`}}/></div><span>{c}</span></div>)}</div></article><article className="panel"><Title title="Monitoring Status" sub="Status perubahan berjalan."/><div className="monitorMini"><div><strong>{stats.pangkat}</strong><span>Naik Pangkat</span></div><div><strong>{stats.mutasi}</strong><span>Mutasi</span></div><div><strong>{stats.pensiun}</strong><span>Pensiun</span></div></div></article></div><article className="panel"><Title title="Update Terbaru" sub="Audit trail terakhir."/><History items={history.slice(0,5)}/></article></section>}
-  {active==='pegawai'&&<section className="view"><article className="panel"><Title title="Data Pegawai" sub="Cari, filter, edit, dan monitoring pegawai."/><div className="filters"><div className="searchBox"><Search size={17}/><input value={q} onChange={e=>setQ(e.target.value)} placeholder="Cari nama, NIP, jabatan..."/></div><select value={unit} onChange={e=>setUnit(e.target.value)}><option value="">Semua Bagian</option>{units.map(u=><option key={u}>{u}</option>)}</select><select value={status} onChange={e=>setStatus(e.target.value)}><option value="">Semua Status</option><option>Aktif</option><option>Naik Pangkat</option><option>Mutasi</option><option>Pensiun</option></select><select value={jenis} onChange={e=>setJenis(e.target.value)}><option value="">Jaksa/TU</option><option>Jaksa</option><option>TU</option></select></div><div className="tableMeta">{filtered.length} data ditampilkan</div><div className="tableWrap"><table><thead><tr><th>Nama Pegawai</th><th>NIP/NRP</th><th>Pangkat/Gol</th><th>Bagian</th><th>Jenis</th><th>Status</th><th>Aksi</th></tr></thead><tbody>{filtered.map(p=><tr key={p.id}><td><div className="nameCell"><div className="miniAvatar">{initials(p.nama)}</div><div><strong>{p.nama}</strong><small>{p.jabatan||'-'}</small></div></div></td><td>{p.nip_nrp}</td><td>{p.pangkat_gol||'-'}</td><td>{p.unit_kerja||'-'}</td><td><span className={`badge ${p.jenis==='Jaksa'?'jaksa':'tu'}`}>{p.jenis}</span></td><td><span className={`badge ${statusClass(p.status)}`}>{p.status}</span></td><td><div className="actions">{canEdit&&<button className="smallBtn edit" onClick={()=>openEdit(p)}><Pencil size={15}/></button>}{profile?.role==='super_admin'&&<button className="smallBtn delete" onClick={()=>del(p)}><Trash2 size={15}/></button>}</div></td></tr>)}</tbody></table></div></article></section>}
-  {active==='update'&&(!ACCESS.update?<AccessDenied/>:<section className="view"><article className="panel"><Title title="Update Naik Pangkat / Mutasi / Pensiun" sub="Setiap perubahan masuk audit trail."/><form className="updateGrid" onSubmit={quickUpdate}><label>Pilih Pegawai<select value={quick.pegawai_id} onChange={e=>setQuick({...quick,pegawai_id:e.target.value})} required><option value="">Pilih pegawai</option>{pegawai.map(p=><option value={p.id} key={p.id}>{p.nama} — {p.jabatan}</option>)}</select></label><label>Jenis Update<select value={quick.tipe} onChange={e=>setQuick({...quick,tipe:e.target.value})}><option>Naik Pangkat</option><option>Mutasi</option><option>Pensiun</option><option>Aktif</option></select></label><label>Pangkat/Gol Baru<input value={quick.pangkat_gol} onChange={e=>setQuick({...quick,pangkat_gol:e.target.value})}/></label><label>Unit Baru{quick.tipe==='Mutasi'?<select value={quick.unit_kerja} onChange={e=>setQuick({...quick,unit_kerja:e.target.value})}><option value="">Pilih satker</option>{satker.map(s=><option key={s.nama_satker} value={s.nama_satker}>{s.nama_satker} - {s.jenis} - {s.provinsi}</option>)}</select>:<select value={quick.unit_kerja} onChange={e=>setQuick({...quick,unit_kerja:e.target.value})}>{units.map(u=><option key={u}>{u}</option>)}</select>}</label><label>Tanggal/TMT<input type="date" value={quick.tanggal} onChange={e=>setQuick({...quick,tanggal:e.target.value})}/></label><label className="fullRow">Catatan<textarea value={quick.catatan} onChange={e=>setQuick({...quick,catatan:e.target.value})}/></label><button className="btn primary fullRow"><Save size={16}/>Simpan Update</button></form></article></section>)}
-  {active==='riwayat'&&(!ACCESS.riwayat?<AccessDenied/>:<section className="view"><article className="panel"><Title title="Audit Trail" sub="Siapa mengubah, kapan, dan apa yang berubah."/><History items={history}/></article></section>)}
-  {active==='backup'&&(!ACCESS.backup?<AccessDenied/>:<section className="view"><article className="panel"><Title title="Backup & Export" sub="Export data dari Supabase."/><button className="btn primary" onClick={exportCsv}><Download size={16}/>Download CSV</button><p className="note">Import awal memakai SQL seed. Setelah online, update dilakukan langsung di aplikasi.</p></article></section>)}</main>
-  {active==='users'&&(!ACCESS.users?<AccessDenied/>:<section className="view usersView">
-  <article className="panel">
-    <Title
-      title="Manajemen User"
-      sub="Kelola akun dan role pengguna"
-    />
+  return (
+    <div className="app">
+      <aside className="sidebar">
+        <div className="brand">
+          <div className="brandLogo">⚖</div>
+          <div><strong>SIGAP-BU</strong><span>Online v3.0</span></div>
+        </div>
+        <div className="userCard">
+          <div className="avatar">{initials(profile?.nama||session.user.email)}</div>
+          <div>
+            <strong>{profile?.nama||session.user.email}</strong>
+            <span>{profile?.role||'viewer'} · {profile?.unit_kerja||'Semua Unit'}</span>
+          </div>
+        </div>
+        <p className="navTitle">NAVIGATION</p>
+        {[['dashboard',Activity,'Dashboard'],['pegawai',Users,'Data Pegawai'],['update',RotateCcw,'Update Pegawai'],['riwayat',ClipboardList,'Audit Trail'],['backup',Database,'Backup'],['users',Users,'Manajemen User']].filter(([key])=>ACCESS[key]).map(([key,Icon,label])=><button key={key} className={`navItem ${active===key?'active':''}`} onClick={()=>setActive(key)}><Icon size={18}/>{label}</button>)}
+        <button className="btn outline logout" onClick={()=>supabase.auth.signOut()}><LogOut size={16}/>Keluar</button>
+      </aside>
+      <main className="main">
+        <header className="hero">
+          <div>
+            <p className="breadcrumb">SIGAP-BU › {active}</p>
+            <h2>{active==='dashboard'?'Dashboard SIGAP-BU':active==='pegawai'?'Data Pegawai':active==='update'?'Update Pegawai':active==='riwayat'?'Audit Trail':active==='users'?'Manajemen User':'Backup & Export'}</h2>
+            <p>Data tersimpan di Supabase dan sinkron untuk seluruh user.</p>
+          </div>
+          <div className="heroActions">
+            <button className="btn glass" onClick={exportCsv}><Download size={16}/>Export CSV</button>
+            {isSuperAdmin&&<button className="btn gold" onClick={openNew}><Plus size={16}/>Tambah Pegawai</button>}
+          </div>
+        </header>
 
-    <div className="tableWrap">
-      <table>
-        <thead>
-          <tr>
-            <th>Nama</th>
-            <th>Role</th>
-            <th>Unit Kerja</th>
-          </tr>
-        </thead>
+        {active==='dashboard'&&(
+          <section className="view">
+            <div className="kpiGrid">
+              <Kpi icon={<Users/>} label="Total Pegawai" value={stats.total}/>
+              <Kpi icon={<Shield/>} label="Jaksa" value={stats.jaksa}/>
+              <Kpi icon={<ClipboardList/>} label="Tata Usaha" value={stats.tu}/>
+              <Kpi icon={<Database/>} label="Pensiun" value={stats.pensiun}/>
+            </div>
+            <div className="contentGrid">
+              <article className="panel">
+                <Title title="Distribusi Pegawai per Bagian" sub="Komposisi dari database pusat."/>
+                <div className="bars">
+                  {unitCounts.map(([u,c])=>(
+                    <div className="barRow" key={u}>
+                      <strong>{u}</strong>
+                      <div className="barTrack">
+                        <div className="barFill" style={{width:`${(c/Math.max(...unitCounts.map(x=>x[1]),1))*100}%`}}/>
+                      </div>
+                      <span>{c}</span>
+                    </div>
+                  ))}
+                </div>
+              </article>
+              <article className="panel">
+                <Title title="Monitoring Status" sub="Status perubahan berjalan."/>
+                <div className="monitorMini">
+                  <div><strong>{stats.pangkat}</strong><span>Naik Pangkat</span></div>
+                  <div><strong>{stats.mutasi}</strong><span>Mutasi</span></div>
+                  <div><strong>{stats.pensiun}</strong><span>Pensiun</span></div>
+                </div>
+              </article>
+            </div>
+            <article className="panel">
+              <Title title="Update Terbaru" sub="Audit trail terakhir."/>
+              <History items={history.slice(0,5)}/>
+            </article>
+          </section>
+        )}
 
-        <tbody>
-          {users.map(u=>(
-            <tr key={u.id}>
-              <td>{u.nama}</td>
-              <td>
-                <span className="badge">
-                  {u.role}
-                </span>
-              </td>
-              <td>
-                {u.unit_kerja || 'Semua Unit'}
-              </td>
-            </tr>
-          ))}
-        </tbody>
+        {active==='pegawai'&&(
+          <section className="view">
+            <article className="panel">
+              <Title title="Data Pegawai" sub="Cari, filter, edit, dan monitoring pegawai."/>
+              <div className="filters">
+                <div className="searchBox"><Search size={17}/><input value={q} onChange={e=>setQ(e.target.value)} placeholder="Cari nama, NIP, jabatan..."/></div>
+                <select value={unit} onChange={e=>setUnit(e.target.value)}><option value="">Semua Bagian</option>{units.map(u=><option key={u}>{u}</option>)}</select>
+                <select value={status} onChange={e=>setStatus(e.target.value)}><option value="">Semua Status</option><option>Aktif</option><option>Naik Pangkat</option><option>Mutasi</option><option>Pensiun</option></select>
+                <select value={jenis} onChange={e=>setJenis(e.target.value)}><option value="">Jaksa/TU</option><option>Jaksa</option><option>TU</option></select>
+              </div>
+              <div className="tableMeta">{filtered.length} data ditampilkan</div>
+              <div className="tableWrap">
+                <table>
+                  <thead>
+                    <tr><th>Nama Pegawai</th><th>NIP/NRP</th><th>Pangkat/Gol</th><th>Bagian</th><th>Jenis</th><th>Status</th><th>Aksi</th></tr>
+                  </thead>
+                  <tbody>
+                    {filtered.map(p=>(
+                      <tr key={p.id}>
+                        <td><div className="nameCell"><div className="miniAvatar">{initials(p.nama)}</div><div><strong>{p.nama}</strong><small>{p.jabatan||'-'}</small></div></div></td>
+                        <td>{p.nip_nrp}</td>
+                        <td>{p.pangkat_gol||'-'}</td>
+                        <td>{p.unit_kerja||'-'}</td>
+                        <td><span className={`badge ${p.jenis==='Jaksa'?'jaksa':'tu'}`}>{p.jenis}</span></td>
+                        <td><span className={`badge ${statusClass(p.status)}`}>{p.status}</span></td>
+                        <td>
+                          <div className="actions">
+                            {canEdit&&<button className="smallBtn edit" onClick={()=>openEdit(p)}><Pencil size={15}/></button>}
+                            {profile?.role==='super_admin'&&<button className="smallBtn delete" onClick={()=>del(p)}><Trash2 size={15}/></button>}
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </article>
+          </section>
+        )}
 
-      </table>
+        {active==='update'&&(!ACCESS.update?<AccessDenied/>:(
+          <section className="view">
+            <article className="panel">
+              <Title title="Update Naik Pangkat / Mutasi / Pensiun" sub="Setiap perubahan masuk audit trail."/>
+              <form className="updateGrid" onSubmit={quickUpdate}>
+                <label>Pilih Pegawai
+                  <select value={quick.pegawai_id} onChange={e=>setQuick({...quick,pegawai_id:e.target.value})} required>
+                    <option value="">Pilih pegawai</option>
+                    {pegawai.map(p=><option value={p.id} key={p.id}>{p.nama} — {p.jabatan}</option>)}
+                  </select>
+                </label>
+                <label>Jenis Update
+                  <select value={quick.tipe} onChange={e=>setQuick({...quick,tipe:e.target.value})}>
+                    <option>Naik Pangkat</option><option>Mutasi</option><option>Pensiun</option><option>Aktif</option>
+                  </select>
+                </label>
+                <label>Pangkat/Gol Baru
+                  <input value={quick.pangkat_gol} onChange={e=>setQuick({...quick,pangkat_gol:e.target.value})}/>
+                </label>
+                <label>Unit Baru
+                  {quick.tipe==='Mutasi'
+                    ? <select value={quick.unit_kerja} onChange={e=>setQuick({...quick,unit_kerja:e.target.value})}>
+                        <option value="">Pilih satker</option>
+                        {satker.map(s=><option key={s.nama_satker} value={s.nama_satker}>{s.nama_satker} - {s.jenis} - {s.provinsi}</option>)}
+                      </select>
+                    : <select value={quick.unit_kerja} onChange={e=>setQuick({...quick,unit_kerja:e.target.value})}>
+                        {units.map(u=><option key={u}>{u}</option>)}
+                      </select>
+                  }
+                </label>
+                <label>Tanggal/TMT
+                  <input type="date" value={quick.tanggal} onChange={e=>setQuick({...quick,tanggal:e.target.value})}/>
+                </label>
+                <label className="fullRow">Catatan
+                  <textarea value={quick.catatan} onChange={e=>setQuick({...quick,catatan:e.target.value})}/>
+                </label>
+                <button className="btn primary fullRow"><Save size={16}/>Simpan Update</button>
+              </form>
+            </article>
+          </section>
+        ))}
+
+        {active==='riwayat'&&(!ACCESS.riwayat?<AccessDenied/>:(
+          <section className="view">
+            <article className="panel">
+              <Title title="Audit Trail" sub="Siapa mengubah, kapan, dan apa yang berubah."/>
+              <History items={history}/>
+            </article>
+          </section>
+        ))}
+
+        {active==='backup'&&(!ACCESS.backup?<AccessDenied/>:(
+          <section className="view">
+            <article className="panel">
+              <Title title="Backup & Export" sub="Export data dari Supabase."/>
+              <button className="btn primary" onClick={exportCsv}><Download size={16}/>Download CSV</button>
+              <p className="note">Import awal memakai SQL seed. Setelah online, update dilakukan langsung di aplikasi.</p>
+            </article>
+          </section>
+        ))}
+
+        {active==='users'&&(!ACCESS.users?<AccessDenied/>:(
+          <section className="view usersView">
+            <article className="panel">
+              <Title title="Manajemen User" sub="Kelola akun dan role pengguna"/>
+              <div className="tableWrap">
+                <table>
+                  <thead>
+                    <tr><th>Nama</th><th>Role</th><th>Unit Kerja</th></tr>
+                  </thead>
+                  <tbody>
+                    {users.map(u=>(
+                      <tr key={u.id}>
+                        <td>{u.nama}</td>
+                        <td><span className="badge">{u.role}</span></td>
+                        <td>{u.unit_kerja || 'Semua Unit'}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </article>
+          </section>
+        ))}
+
+        {modal&&(
+          <div className="modalBackdrop">
+            <form className="modal" onSubmit={savePegawai}>
+              <div className="modalHead">
+                <div><p className="eyebrow blue">Form Pegawai</p><h3>{editing?'Edit Pegawai':'Tambah Pegawai'}</h3></div>
+                <button type="button" className="xBtn" onClick={()=>setModal(false)}>×</button>
+              </div>
+              <div className="formGrid">
+                {['nama','nip_nrp','pangkat_gol','jabatan','sub_unit'].map(k=>(
+                  <label key={k}>{k.replaceAll('_',' ').toUpperCase()}<input value={form[k]||''} onChange={e=>setForm({...form,[k]:e.target.value})} required={k==='nama'||k==='nip_nrp'}/></label>
+                ))}
+                <label>Bagian<select value={form.unit_kerja} onChange={e=>setForm({...form,unit_kerja:e.target.value})}>{units.map(u=><option key={u}>{u}</option>)}</select></label>
+                <label>Jenis<select value={form.jenis} onChange={e=>setForm({...form,jenis:e.target.value})}><option>Jaksa</option><option>TU</option></select></label>
+                <label>Status<select value={form.status} onChange={e=>setForm({...form,status:e.target.value})}><option>Aktif</option><option>Naik Pangkat</option><option>Mutasi</option><option>Pensiun</option></select></label>
+                <label>TMT Pangkat<input type="date" value={form.tmt_pangkat||''} onChange={e=>setForm({...form,tmt_pangkat:e.target.value})}/></label>
+                <label>TMT Jabatan<input type="date" value={form.tmt_jabatan||''} onChange={e=>setForm({...form,tmt_jabatan:e.target.value})}/></label>
+                <label>Tanggal Pensiun<input type="date" value={form.tanggal_pensiun||''} onChange={e=>setForm({...form,tanggal_pensiun:e.target.value})}/></label>
+                <label className="fullRow">Keterangan<textarea value={form.keterangan||''} onChange={e=>setForm({...form,keterangan:e.target.value})}/></label>
+              </div>
+              <div className="modalActions">
+                <button type="button" className="btn outline" onClick={()=>setModal(false)}>Batal</button>
+                <button className="btn primary"><Save size={16}/>Simpan</button>
+              </div>
+            </form>
+          </div>
+        )}
+      </main>
     </div>
-
-  </article>
-</section>)}
-    {modal&&<div className="modalBackdrop"><form className="modal" onSubmit={savePegawai}><div className="modalHead"><div><p className="eyebrow blue">Form Pegawai</p><h3>{editing?'Edit Pegawai':'Tambah Pegawai'}</h3></div><button type="button" className="xBtn" onClick={()=>setModal(false)}>×</button></div><div className="formGrid">{['nama','nip_nrp','pangkat_gol','jabatan','sub_unit'].map(k=><label key={k}>{k.replaceAll('_',' ').toUpperCase()}<input value={form[k]||''} onChange={e=>setForm({...form,[k]:e.target.value})} required={k==='nama'||k==='nip_nrp'}/></label>)}<label>Bagian<select value={form.unit_kerja} onChange={e=>setForm({...form,unit_kerja:e.target.value})}>{units.map(u=><option key={u}>{u}</option>)}</select></label><label>Jenis<select value={form.jenis} onChange={e=>setForm({...form,jenis:e.target.value})}><option>Jaksa</option><option>TU</option></select></label><label>Status<select value={form.status} onChange={e=>setForm({...form,status:e.target.value})}><option>Aktif</option><option>Naik Pangkat</option><option>Mutasi</option><option>Pensiun</option></select></label><label>TMT Pangkat<input type="date" value={form.tmt_pangkat||''} onChange={e=>setForm({...form,tmt_pangkat:e.target.value})}/></label><label>TMT Jabatan<input type="date" value={form.tmt_jabatan||''} onChange={e=>setForm({...form,tmt_jabatan:e.target.value})}/></label><label>Tanggal Pensiun<input type="date" value={form.tanggal_pensiun||''} onChange={e=>setForm({...form,tanggal_pensiun:e.target.value})}/></label><label className="fullRow">Keterangan<textarea value={form.keterangan||''} onChange={e=>setForm({...form,keterangan:e.target.value})}/></label></div><div className="modalActions"><button type="button" className="btn outline" onClick={()=>setModal(false)}>Batal</button><button className="btn primary"><Save size={16}/>Simpan</button></div></form></div>}</div>
+  )
 }
 
 function Kpi({icon,label,value}){return <article className="kpi"><div className="kpiIcon">{icon}</div><span>{label}</span><strong>{value}</strong><small>Database pusat</small></article>}
