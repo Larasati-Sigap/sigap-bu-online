@@ -115,3 +115,4 @@ createRoot(document.getElementById('root')).render(<App/>)
 // Fix user management section layout
 // hide employe actions on users page
 // restore hero actions
+// fix hero actions syntax
