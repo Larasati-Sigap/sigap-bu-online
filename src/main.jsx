@@ -1,8 +1,10 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { createRoot } from 'react-dom/client'
-import { Users, Shield, ClipboardList, LogOut, Search, Plus, Save, Database, Activity, RotateCcw, Download, Pencil, Trash2 } from 'lucide-react'
+import { Users, Shield, ClipboardList, LogOut, Search, Plus, Save, Database, Activity, RotateCcw, Download, Pencil, Trash2, FileText } from 'lucide-react'
 import { supabase } from './supabaseClient'
 import './styles.css'
+import jsPDF from 'jspdf'
+import autoTable from 'jspdf-autotable'
 
 const units = ['Tata Usaha Pimpinan','Protokol & Pengamanan Pimpinan','Keamanan Dalam','Tata Usaha & Kearsipan','Sarana, Prasarana & Rumah Tangga','Asisten Khusus Jaksa Agung','Asisten Umum Jaksa Agung']
 const emptyForm = { nama:'', nip_nrp:'', pangkat_gol:'', jabatan:'', unit_kerja:'Tata Usaha & Kearsipan', sub_unit:'', jenis:'TU', status:'Aktif', tmt_pangkat:'', tmt_jabatan:'', tanggal_pensiun:'', keterangan:'' }
@@ -60,6 +62,37 @@ async function loadUsers(){
   async function del(p){ if(profile?.role!=='super_admin')return alert('Hanya super admin.'); if(!confirm(`Hapus ${p.nama}?`))return; const {error}=await supabase.from('pegawai').delete().eq('id',p.id); if(error)return alert(error.message); await addHistory(p.id,'Hapus Data','data_pegawai',p.nama,'','Data dihapus') }
   async function quickUpdate(e){ e.preventDefault(); const p=pegawai.find(x=>x.id===quick.pegawai_id); if(!p)return alert('Pilih pegawai.'); let payload={status:quick.tipe,keterangan:quick.catatan}, field='status', old=p.status, neu=quick.tipe; if(quick.tipe==='Naik Pangkat'){payload.pangkat_gol=quick.pangkat_gol||p.pangkat_gol;payload.tmt_pangkat=quick.tanggal||null;field='pangkat_gol';old=p.pangkat_gol;neu=payload.pangkat_gol} if(quick.tipe==='Mutasi'){payload.unit_kerja=quick.unit_kerja;field='unit_kerja';old=p.unit_kerja;neu=quick.unit_kerja} if(quick.tipe==='Pensiun')payload.tanggal_pensiun=quick.tanggal||null; const {error}=await supabase.from('pegawai').update(payload).eq('id',p.id); if(error)return alert(error.message); await addHistory(p.id,quick.tipe,field,old,neu,quick.catatan); alert('Update berhasil.') }
   function exportCsv(){ const rows=pegawai.map(p=>[p.nama,p.jabatan,p.nip_nrp,p.pangkat_gol,p.unit_kerja,p.sub_unit,p.jenis,p.status,p.keterangan].map(v=>`"${String(v||'').replaceAll('"','""')}"`).join(',')); const blob=new Blob([['Nama,Jabatan,NIP/NRP,Pangkat/Gol,Unit Kerja,Sub Unit,Jenis,Status,Keterangan',...rows].join('\n')],{type:'text/csv'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='sigap-bu-data-pegawai.csv'; a.click() }
+  function exportPdf(){
+    const doc = new jsPDF({ orientation:'landscape', unit:'mm', format:'a4' })
+    const now = new Date()
+    const tgl = now.toLocaleDateString('id-ID',{weekday:'long',year:'numeric',month:'long',day:'numeric'})
+    const adminNama = profile?.nama || session.user.email
+    doc.setFontSize(14)
+    doc.setFont('helvetica','bold')
+    doc.text('DATA PEGAWAI BIRO UMUM', doc.internal.pageSize.getWidth()/2, 18, {align:'center'})
+    doc.setFontSize(10)
+    doc.setFont('helvetica','normal')
+    doc.text('SIGAP-BU Online v3.0', doc.internal.pageSize.getWidth()/2, 25, {align:'center'})
+    const cols = ['No','Nama','NIP/NRP','Jabatan','Pangkat/Gol','Unit Kerja','Status']
+    const rows = filtered.map((p,i)=>[i+1, p.nama||'-', p.nip_nrp||'-', p.jabatan||'-', p.pangkat_gol||'-', p.unit_kerja||'-', p.status||'-'])
+    autoTable(doc,{
+      head:[cols],
+      body:rows,
+      startY:30,
+      styles:{fontSize:8, cellPadding:2},
+      headStyles:{fillColor:[30,58,138], textColor:255, fontStyle:'bold'},
+      alternateRowStyles:{fillColor:[239,246,255]},
+      columnStyles:{0:{cellWidth:10,halign:'center'},1:{cellWidth:45},2:{cellWidth:30},3:{cellWidth:40},4:{cellWidth:25},5:{cellWidth:55},6:{cellWidth:22}},
+      didDrawPage:(data)=>{
+        const pageCount = doc.internal.getNumberOfPages()
+        doc.setFontSize(8)
+        doc.setFont('helvetica','normal')
+        doc.text(`Dicetak: ${tgl} · Admin: ${adminNama}`, 14, doc.internal.pageSize.getHeight()-8)
+        doc.text(`Halaman ${data.pageNumber} dari ${pageCount}`, doc.internal.pageSize.getWidth()-14, doc.internal.pageSize.getHeight()-8, {align:'right'})
+      }
+    })
+    doc.save(`sigap-bu-pegawai-${now.toISOString().slice(0,10)}.pdf`)
+  }
 
   if(loading)return <div className="loading">Memuat SIGAP-BU...</div>
   if(!session)return <Login/>
@@ -90,6 +123,7 @@ async function loadUsers(){
           </div>
           <div className="heroActions">
             <button className="btn glass" onClick={exportCsv}><Download size={16}/>Export CSV</button>
+            {isSuperAdmin&&<button className="btn glass" onClick={exportPdf}><FileText size={16}/>Export PDF</button>}
             {isSuperAdmin&&<button className="btn gold" onClick={openNew}><Plus size={16}/>Tambah Pegawai</button>}
           </div>
         </header>
