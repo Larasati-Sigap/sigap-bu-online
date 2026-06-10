@@ -53,6 +53,24 @@ async function loadUsers(){
   const AccessDenied = ()=><section className="view"><article className="panel" style={{textAlign:'center',padding:'3rem'}}><p style={{fontSize:'1.2rem',color:'var(--danger,#e53e3e)'}}>🔒 Anda tidak memiliki hak akses ke fitur ini.</p></article></section>
   const filtered = useMemo(()=>pegawai.filter(p=>`${p.nama} ${p.nip_nrp} ${p.pangkat_gol} ${p.jabatan} ${p.unit_kerja}`.toLowerCase().includes(q.toLowerCase()) && (!unit||p.unit_kerja===unit) && (!status||p.status===status) && (!jenis||p.jenis===jenis)),[pegawai,q,unit,status,jenis])
   const stats = { total:pegawai.length, jaksa:pegawai.filter(p=>p.jenis==='Jaksa').length, tu:pegawai.filter(p=>p.jenis==='TU').length, pensiun:pegawai.filter(p=>p.status==='Pensiun').length, mutasi:pegawai.filter(p=>p.status==='Mutasi').length, pangkat:pegawai.filter(p=>p.status==='Naik Pangkat').length }
+  const bulanIni = new Date().getMonth()
+
+const ulangTahunBulanIni = pegawai.filter(p => {
+  if (!p.tanggal_lahir) return false
+  return new Date(p.tanggal_lahir).getMonth() === bulanIni
+})
+
+const ulangTahunHariIni = pegawai.filter(p => {
+  if (!p.tanggal_lahir) return false
+
+  const tgl = new Date(p.tanggal_lahir)
+  const sekarang = new Date()
+
+  return (
+    tgl.getDate() === sekarang.getDate() &&
+    tgl.getMonth() === sekarang.getMonth()
+  )
+})
   const unitCounts = Object.entries(pegawai.reduce((a,p)=>{a[p.unit_kerja]=(a[p.unit_kerja]||0)+1;return a},{})).sort((a,b)=>b[1]-a[1])
 
   function openNew(){ setEditing(null); setForm(emptyForm); setModal(true) }
@@ -161,9 +179,38 @@ async function loadUsers(){
               </article>
             </div>
             <article className="panel">
-              <Title title="Update Terbaru" sub="Audit trail terakhir."/>
-              <History items={history.slice(0,5)}/>
-            </article>
+  <Title
+    title="🎂 Ulang Tahun Pegawai"
+    sub="Monitoring ulang tahun pegawai."
+  />
+
+  {ulangTahunHariIni.length > 0 && (
+    <div className="alert">
+      🎉 Ada {ulangTahunHariIni.length} pegawai yang berulang tahun hari ini!
+    </div>
+  )}
+
+  {ulangTahunBulanIni.length === 0 ? (
+    <p className="note">
+      Tidak ada ulang tahun bulan ini.
+    </p>
+  ) : (
+    <div className="historyList">
+      {ulangTahunBulanIni.map(p => (
+        <div key={p.id} className="historyItem">
+          <div className="historyIcon">🎂</div>
+          <div>
+            <strong>{p.nama}</strong>
+            <small>
+              {new Date(p.tanggal_lahir)
+                .toLocaleDateString('id-ID')}
+            </small>
+          </div>
+        </div>
+      ))}
+    </div>
+  )}
+</article>
           </section>
         )}
 
@@ -306,6 +353,14 @@ async function loadUsers(){
                 <label>Bagian<select value={form.unit_kerja} onChange={e=>setForm({...form,unit_kerja:e.target.value})}>{units.map(u=><option key={u}>{u}</option>)}</select></label>
                 <label>Jenis<select value={form.jenis} onChange={e=>setForm({...form,jenis:e.target.value})}><option>Jaksa</option><option>TU</option></select></label>
                 <label>Status<select value={form.status} onChange={e=>setForm({...form,status:e.target.value})}><option>Aktif</option><option>Naik Pangkat</option><option>Mutasi</option><option>Pensiun</option></select></label>
+               <label>
+  Tanggal Lahir
+  <input
+    type="date"
+    value={form.tanggal_lahir || ''}
+    onChange={e=>setForm({...form,tanggal_lahir:e.target.value})}
+  />
+</label>
                 <label>TMT Pangkat<input type="date" value={form.tmt_pangkat||''} onChange={e=>setForm({...form,tmt_pangkat:e.target.value})}/></label>
                 <label>TMT Jabatan<input type="date" value={form.tmt_jabatan||''} onChange={e=>setForm({...form,tmt_jabatan:e.target.value})}/></label>
                 <label>Tanggal Pensiun<input type="date" value={form.tanggal_pensiun||''} onChange={e=>setForm({...form,tanggal_pensiun:e.target.value})}/></label>
