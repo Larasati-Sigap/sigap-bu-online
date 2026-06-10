@@ -6,13 +6,13 @@
   },
   "dependencies": {
     "@vitejs/plugin-react": "latest",
-    "jspdf": "^2.5.2",
-    "jspdf-autotable": "^3.8.4"
     "vite": "latest",
     "react": "latest",
     "react-dom": "latest",
     "@supabase/supabase-js": "latest",
-    "lucide-react": "latest"
+    "lucide-react": "latest",
+    "jspdf": "^2.5.2",
+    "jspdf-autotable": "^3.8.4"
   },
   "devDependencies": {}
 }
