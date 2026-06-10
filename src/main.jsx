@@ -10,6 +10,8 @@ const units = ['Tata Usaha Pimpinan','Protokol & Pengamanan Pimpinan','Keamanan 
 const emptyForm = { nama:'', nip_nrp:'', pangkat_gol:'', jabatan:'', unit_kerja:'Tata Usaha & Kearsipan', sub_unit:'', jenis:'TU', status:'Aktif', tmt_pangkat:'', tmt_jabatan:'', tanggal_pensiun:'', keterangan:'' }
 const initials = (n='') => n.split(/\s+/).filter(Boolean).slice(0,2).map(x=>x[0]).join('').toUpperCase() || 'BU'
 const statusClass = s => s === 'Naik Pangkat' ? 'naik' : s === 'Mutasi' ? 'mutasi' : s === 'Pensiun' ? 'pensiun' : 'aktif'
+const pangkatTU = ['Pengatur Muda (II/a)','Pengatur Muda Tk. I (II/b)','Pengatur (II/c)','Pengatur Tk. I (II/d)','Penata Muda (III/a)','Penata Muda Tk. I (III/b)','Penata (III/c)','Penata Tk. I (III/d)','Pembina (IV/a)','Pembina Tk. I (IV/b)','Pembina Utama Muda (IV/c)','Pembina Utama Madya (IV/d)','Pembina Utama (IV/e)']
+const pangkatJaksa = ['Ajun Jaksa Madya (III/a)','Ajun Jaksa (III/b)','Jaksa Pratama (III/c)','Jaksa Muda (III/d)','Jaksa Madya (IV/a)','Jaksa Utama Pratama (IV/b)','Jaksa Utama Muda (IV/c)','Jaksa Utama Madya (IV/d)','Jaksa Utama (IV/e)']
 
 function Login() {
   const [email,setEmail]=useState(''), [password,setPassword]=useState(''), [msg,setMsg]=useState(''), [loading,setLoading]=useState(false)
@@ -21,7 +23,7 @@ function App(){
   const [session,setSession]=useState(null), [profile,setProfile]=useState(null), [pegawai,setPegawai]=useState([]), [history,setHistory]=useState([])
   const [active,setActive]=useState('dashboard'), [loading,setLoading]=useState(true), [q,setQ]=useState(''), [unit,setUnit]=useState(''), [status,setStatus]=useState(''), [jenis,setJenis]=useState('')
   const [modal,setModal]=useState(false), [editing,setEditing]=useState(null), [form,setForm]=useState(emptyForm)
-  const [quick,setQuick]=useState({pegawai_id:'', tipe:'Naik Pangkat', pangkat_gol:'', unit_kerja:'Tata Usaha & Kearsipan', tanggal:new Date().toISOString().slice(0,10), catatan:''})
+  const [quick,setQuick]=useState({pegawai_id:'', tipe:'Naik Pangkat', jenis:'', pangkat_gol:'', unit_kerja:'Tata Usaha & Kearsipan', tanggal:new Date().toISOString().slice(0,10), catatan:''})
   const [users,setUsers]=useState([])
   const [satker,setSatker]=useState([])
   useEffect(()=>{ supabase.auth.getSession().then(({data})=>{setSession(data.session);setLoading(false)}); const {data}=supabase.auth.onAuthStateChange((_e,s)=>setSession(s)); return()=>data.subscription.unsubscribe() },[])
@@ -38,13 +40,13 @@ function App(){
   async function loadProfile(){ const {data}=await supabase.from('profiles').select('*').eq('id',session.user.id).single(); setProfile(data) }
   async function loadPegawai(){ const {data}=await supabase.from('pegawai').select('*').order('urutan_pangkat',{ascending:false}); setPegawai(data||[]) }
   async function loadHistory(){ const {data}=await supabase.from('riwayat_perubahan').select('*').order('created_at',{ascending:false}).limit(100); setHistory(data||[]) }
-async function loadUsers(){
-  const {data}=await supabase
-    .from('profiles')
-    .select('*')
-    .order('nama')
-  setUsers(data||[])
-}
+  async function loadUsers(){
+    const {data}=await supabase
+      .from('profiles')
+      .select('*')
+      .order('nama')
+    setUsers(data||[])
+  }
   const role = profile?.role || 'viewer'
   const isSuperAdmin = role === 'super_admin'
   const isAdminUp = isSuperAdmin || role === 'admin_bagian'
@@ -53,31 +55,29 @@ async function loadUsers(){
   const AccessDenied = ()=><section className="view"><article className="panel" style={{textAlign:'center',padding:'3rem'}}><p style={{fontSize:'1.2rem',color:'var(--danger,#e53e3e)'}}>🔒 Anda tidak memiliki hak akses ke fitur ini.</p></article></section>
   const filtered = useMemo(()=>pegawai.filter(p=>`${p.nama} ${p.nip_nrp} ${p.pangkat_gol} ${p.jabatan} ${p.unit_kerja}`.toLowerCase().includes(q.toLowerCase()) && (!unit||p.unit_kerja===unit) && (!status||p.status===status) && (!jenis||p.jenis===jenis)),[pegawai,q,unit,status,jenis])
   const stats = { total:pegawai.length, jaksa:pegawai.filter(p=>p.jenis==='Jaksa').length, tu:pegawai.filter(p=>p.jenis==='TU').length, pensiun:pegawai.filter(p=>p.status==='Pensiun').length, mutasi:pegawai.filter(p=>p.status==='Mutasi').length, pangkat:pegawai.filter(p=>p.status==='Naik Pangkat').length }
-  const bulanIni = new Date().getMonth()
 
-const ulangTahunBulanIni = pegawai
-  .filter(p => {
+  const ulangTahunBulanIni = pegawai
+    .filter(p => {
+      if (!p.tanggal_lahir) return false
+      const tgl = new Date(p.tanggal_lahir)
+      return tgl.getMonth() === new Date().getMonth()
+    })
+    .sort((a,b)=>{
+      const hariA = new Date(a.tanggal_lahir).getDate()
+      const hariB = new Date(b.tanggal_lahir).getDate()
+      return hariA - hariB
+    })
+
+  const ulangTahunHariIni = pegawai.filter(p => {
     if (!p.tanggal_lahir) return false
     const tgl = new Date(p.tanggal_lahir)
-    return tgl.getMonth() === new Date().getMonth()
+    const sekarang = new Date()
+    return (
+      tgl.getDate() === sekarang.getDate() &&
+      tgl.getMonth() === sekarang.getMonth()
+    )
   })
-  .sort((a,b)=>{
-    const hariA = new Date(a.tanggal_lahir).getDate()
-    const hariB = new Date(b.tanggal_lahir).getDate()
-    return hariA - hariB
-  })
 
-const ulangTahunHariIni = pegawai.filter(p => {
-  if (!p.tanggal_lahir) return false
-
-  const tgl = new Date(p.tanggal_lahir)
-  const sekarang = new Date()
-
-  return (
-    tgl.getDate() === sekarang.getDate() &&
-    tgl.getMonth() === sekarang.getMonth()
-  )
-})
   const unitCounts = Object.entries(pegawai.reduce((a,p)=>{a[p.unit_kerja]=(a[p.unit_kerja]||0)+1;return a},{})).sort((a,b)=>b[1]-a[1])
 
   function openNew(){ setEditing(null); setForm(emptyForm); setModal(true) }
@@ -85,7 +85,7 @@ const ulangTahunHariIni = pegawai.filter(p => {
   async function addHistory(pegawai_id,tipe,field,oldValue,newValue,catatan){ await supabase.from('riwayat_perubahan').insert({pegawai_id,tipe,field_diubah:field,nilai_lama:oldValue||'',nilai_baru:newValue||'',catatan:catatan||'',admin_id:session.user.id,admin_nama:profile?.nama||session.user.email}) }
   async function savePegawai(e){ e.preventDefault(); if(!canEdit)return alert('Akun ini viewer.'); const payload={...form,tmt_pangkat:form.tmt_pangkat||null,tmt_jabatan:form.tmt_jabatan||null,tanggal_pensiun:form.tanggal_pensiun||null}; if(editing){ const {error}=await supabase.from('pegawai').update(payload).eq('id',editing.id); if(error)return alert(error.message); await addHistory(editing.id,'Edit Data Pegawai','status',editing.status,payload.status,form.keterangan) } else { const {data,error}=await supabase.from('pegawai').insert(payload).select().single(); if(error)return alert(error.message); await addHistory(data.id,'Tambah Pegawai','data_pegawai','',payload.status,form.keterangan) } setModal(false) }
   async function del(p){ if(profile?.role!=='super_admin')return alert('Hanya super admin.'); if(!confirm(`Hapus ${p.nama}?`))return; const {error}=await supabase.from('pegawai').delete().eq('id',p.id); if(error)return alert(error.message); await addHistory(p.id,'Hapus Data','data_pegawai',p.nama,'','Data dihapus') }
-  async function quickUpdate(e){ e.preventDefault(); const p=pegawai.find(x=>x.id===quick.pegawai_id); if(!p)return alert('Pilih pegawai.'); let payload={status:quick.tipe,keterangan:quick.catatan}, field='status', old=p.status, neu=quick.tipe; if(quick.tipe==='Naik Pangkat'){payload.pangkat_gol=quick.pangkat_gol||p.pangkat_gol;payload.tmt_pangkat=quick.tanggal||null;field='pangkat_gol';old=p.pangkat_gol;neu=payload.pangkat_gol} if(quick.tipe==='Mutasi'){payload.unit_kerja=quick.unit_kerja;field='unit_kerja';old=p.unit_kerja;neu=quick.unit_kerja} if(quick.tipe==='Pensiun')payload.tanggal_pensiun=quick.tanggal||null; const {error}=await supabase.from('pegawai').update(payload).eq('id',p.id); if(error)return alert(error.message); await addHistory(p.id,quick.tipe,field,old,neu,quick.catatan); alert('Update berhasil.') }
+  async function quickUpdate(e){ e.preventDefault(); const p=pegawai.find(x=>x.id===quick.pegawai_id); if(!p)return alert('Pilih pegawai.'); if(quick.tipe==='Naik Pangkat'&&!quick.jenis)return alert('Pilih jenis pegawai terlebih dahulu.'); if(quick.tipe==='Naik Pangkat'&&!quick.pangkat_gol)return alert('Pilih pangkat/golongan baru.'); let payload={status:quick.tipe,keterangan:quick.catatan}, field='status', old=p.status, neu=quick.tipe; if(quick.tipe==='Naik Pangkat'){payload.pangkat_gol=quick.pangkat_gol;payload.jenis=quick.jenis;payload.tmt_pangkat=quick.tanggal||null;field='pangkat_gol';old=p.pangkat_gol;neu=payload.pangkat_gol} if(quick.tipe==='Mutasi'){payload.unit_kerja=quick.unit_kerja;field='unit_kerja';old=p.unit_kerja;neu=quick.unit_kerja} if(quick.tipe==='Pensiun')payload.tanggal_pensiun=quick.tanggal||null; const {error}=await supabase.from('pegawai').update(payload).eq('id',p.id); if(error)return alert(error.message); await addHistory(p.id,quick.tipe,field,old,neu,quick.catatan); alert('Update berhasil.') }
   function exportCsv(){ const rows=pegawai.map(p=>[p.nama,p.jabatan,p.nip_nrp,p.pangkat_gol,p.unit_kerja,p.sub_unit,p.jenis,p.status,p.keterangan].map(v=>`"${String(v||'').replaceAll('"','""')}"`).join(',')); const blob=new Blob([['Nama,Jabatan,NIP/NRP,Pangkat/Gol,Unit Kerja,Sub Unit,Jenis,Status,Keterangan',...rows].join('\n')],{type:'text/csv'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='sigap-bu-data-pegawai.csv'; a.click() }
   function exportPdf(){
     const doc = new jsPDF({ orientation:'landscape', unit:'mm', format:'a4' })
@@ -186,38 +186,28 @@ const ulangTahunHariIni = pegawai.filter(p => {
               </article>
             </div>
             <article className="panel">
-  <Title
-    title="🎂 Ulang Tahun Pegawai"
-    sub="Monitoring ulang tahun pegawai."
-  />
-
-  {ulangTahunHariIni.length > 0 && (
-    <div className="alert">
-      🎉 Ada {ulangTahunHariIni.length} pegawai yang berulang tahun hari ini!
-    </div>
-  )}
-
-  {ulangTahunBulanIni.length === 0 ? (
-    <p className="note">
-      Tidak ada ulang tahun bulan ini.
-    </p>
-  ) : (
-    <div className="historyList">
-      {ulangTahunBulanIni.map(p => (
-        <div key={p.id} className="historyItem">
-          <div className="historyIcon">🎂</div>
-          <div>
-            <strong>{p.nama}</strong>
-            <small>
-              {new Date(p.tanggal_lahir)
-                .toLocaleDateString('id-ID')}
-            </small>
-          </div>
-        </div>
-      ))}
-    </div>
-  )}
-</article>
+              <Title title="🎂 Ulang Tahun Pegawai" sub="Monitoring ulang tahun pegawai."/>
+              {ulangTahunHariIni.length > 0 && (
+                <div className="alert">
+                  🎉 Ada {ulangTahunHariIni.length} pegawai yang berulang tahun hari ini!
+                </div>
+              )}
+              {ulangTahunBulanIni.length === 0 ? (
+                <p className="note">Tidak ada ulang tahun bulan ini.</p>
+              ) : (
+                <div className="historyList">
+                  {ulangTahunBulanIni.map(p => (
+                    <div key={p.id} className="historyItem">
+                      <div className="historyIcon">🎂</div>
+                      <div>
+                        <strong>{p.nama}</strong>
+                        <small>{new Date(p.tanggal_lahir).toLocaleDateString('id-ID')}</small>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </article>
           </section>
         )}
 
@@ -273,13 +263,27 @@ const ulangTahunHariIni = pegawai.filter(p => {
                   </select>
                 </label>
                 <label>Jenis Update
-                  <select value={quick.tipe} onChange={e=>setQuick({...quick,tipe:e.target.value})}>
+                  <select value={quick.tipe} onChange={e=>setQuick({...quick,tipe:e.target.value,jenis:'',pangkat_gol:''})}>
                     <option>Naik Pangkat</option><option>Mutasi</option><option>Pensiun</option><option>Aktif</option>
                   </select>
                 </label>
-                <label>Pangkat/Gol Baru
-                  <input value={quick.pangkat_gol} onChange={e=>setQuick({...quick,pangkat_gol:e.target.value})}/>
-                </label>
+                {quick.tipe==='Naik Pangkat'&&(
+                  <label>Jenis
+                    <select value={quick.jenis} onChange={e=>setQuick({...quick,jenis:e.target.value,pangkat_gol:''})}>
+                      <option value="">Pilih jenis</option>
+                      <option value="TU">TU</option>
+                      <option value="Jaksa">Jaksa</option>
+                    </select>
+                  </label>
+                )}
+                {quick.tipe==='Naik Pangkat'&&quick.jenis&&(
+                  <label>Pangkat/Gol Baru
+                    <select value={quick.pangkat_gol} onChange={e=>setQuick({...quick,pangkat_gol:e.target.value})}>
+                      <option value="">Pilih pangkat/gol</option>
+                      {(quick.jenis==='TU'?pangkatTU:pangkatJaksa).map(p=><option key={p} value={p}>{p}</option>)}
+                    </select>
+                  </label>
+                )}
                 <label>Unit Baru
                   {quick.tipe==='Mutasi'
                     ? <select value={quick.unit_kerja} onChange={e=>setQuick({...quick,unit_kerja:e.target.value})}>
@@ -360,14 +364,14 @@ const ulangTahunHariIni = pegawai.filter(p => {
                 <label>Bagian<select value={form.unit_kerja} onChange={e=>setForm({...form,unit_kerja:e.target.value})}>{units.map(u=><option key={u}>{u}</option>)}</select></label>
                 <label>Jenis<select value={form.jenis} onChange={e=>setForm({...form,jenis:e.target.value})}><option>Jaksa</option><option>TU</option></select></label>
                 <label>Status<select value={form.status} onChange={e=>setForm({...form,status:e.target.value})}><option>Aktif</option><option>Naik Pangkat</option><option>Mutasi</option><option>Pensiun</option></select></label>
-               <label>
-  Tanggal Lahir
-  <input
-    type="date"
-    value={form.tanggal_lahir || ''}
-    onChange={e=>setForm({...form,tanggal_lahir:e.target.value})}
-  />
-</label>
+                <label>
+                  Tanggal Lahir
+                  <input
+                    type="date"
+                    value={form.tanggal_lahir || ''}
+                    onChange={e=>setForm({...form,tanggal_lahir:e.target.value})}
+                  />
+                </label>
                 <label>TMT Pangkat<input type="date" value={form.tmt_pangkat||''} onChange={e=>setForm({...form,tmt_pangkat:e.target.value})}/></label>
                 <label>TMT Jabatan<input type="date" value={form.tmt_jabatan||''} onChange={e=>setForm({...form,tmt_jabatan:e.target.value})}/></label>
                 <label>Tanggal Pensiun<input type="date" value={form.tanggal_pensiun||''} onChange={e=>setForm({...form,tanggal_pensiun:e.target.value})}/></label>
