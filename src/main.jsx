@@ -55,10 +55,17 @@ async function loadUsers(){
   const stats = { total:pegawai.length, jaksa:pegawai.filter(p=>p.jenis==='Jaksa').length, tu:pegawai.filter(p=>p.jenis==='TU').length, pensiun:pegawai.filter(p=>p.status==='Pensiun').length, mutasi:pegawai.filter(p=>p.status==='Mutasi').length, pangkat:pegawai.filter(p=>p.status==='Naik Pangkat').length }
   const bulanIni = new Date().getMonth()
 
-const ulangTahunBulanIni = pegawai.filter(p => {
-  if (!p.tanggal_lahir) return false
-  return new Date(p.tanggal_lahir).getMonth() === bulanIni
-})
+const ulangTahunBulanIni = pegawai
+  .filter(p => {
+    if (!p.tanggal_lahir) return false
+    const tgl = new Date(p.tanggal_lahir)
+    return tgl.getMonth() === new Date().getMonth()
+  })
+  .sort((a,b)=>{
+    const hariA = new Date(a.tanggal_lahir).getDate()
+    const hariB = new Date(b.tanggal_lahir).getDate()
+    return hariA - hariB
+  })
 
 const ulangTahunHariIni = pegawai.filter(p => {
   if (!p.tanggal_lahir) return false
