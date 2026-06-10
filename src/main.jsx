@@ -10,7 +10,7 @@ const units = ['Tata Usaha Pimpinan','Protokol & Pengamanan Pimpinan','Keamanan 
 const emptyForm = { nama:'', nip_nrp:'', pangkat_gol:'', jabatan:'', unit_kerja:'Tata Usaha & Kearsipan', sub_unit:'', jenis:'TU', status:'Aktif', tmt_pangkat:'', tmt_jabatan:'', tanggal_pensiun:'', keterangan:'' }
 const initials = (n='') => n.split(/\s+/).filter(Boolean).slice(0,2).map(x=>x[0]).join('').toUpperCase() || 'BU'
 const statusClass = s => s === 'Naik Pangkat' ? 'naik' : s === 'Mutasi' ? 'mutasi' : s === 'Pensiun' ? 'pensiun' : 'aktif'
-const pangkatTU = ['Pengatur Muda (II/a)','Pengatur Muda Tk. I (II/b)','Pengatur (II/c)','Pengatur Tk. I (II/d)','Penata Muda (III/a)','Penata Muda Tk. I (III/b)','Penata (III/c)','Penata Tk. I (III/d)','Pembina (IV/a)','Pembina Tk. I (IV/b)','Pembina Utama Muda (IV/c)','Pembina Utama Madya (IV/d)','Pembina Utama (IV/e)']
+const pangkatTU = ['Yuana Darma (II/a)','Muda Darma (II/b)','Madya Darma (II/c)','Sena Darma (II/d)','Yuana Wira (III/a)','Muda Wira (III/b)','Madya Wira (III/c)','Sena Wira (III/d)','Adi Wira (IV/a)','Nindya Wira (IV/b)','Adi Adhyaksa (IV/c)','Nindya Adhyaksa (IV/d)','Utama Adhyaksa (IV/e)']
 const pangkatJaksa = ['Ajun Jaksa Madya (III/a)','Ajun Jaksa (III/b)','Jaksa Pratama (III/c)','Jaksa Muda (III/d)','Jaksa Madya (IV/a)','Jaksa Utama Pratama (IV/b)','Jaksa Utama Muda (IV/c)','Jaksa Utama Madya (IV/d)','Jaksa Utama (IV/e)']
 
 function Login() {
