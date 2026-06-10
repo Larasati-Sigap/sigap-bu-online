@@ -53,7 +53,18 @@ function App(){
   const canEdit = isAdminUp
   const ACCESS = { dashboard:true, pegawai:true, update:isAdminUp, riwayat:isAdminUp, backup:isSuperAdmin, users:isSuperAdmin }
   const AccessDenied = ()=><section className="view"><article className="panel" style={{textAlign:'center',padding:'3rem'}}><p style={{fontSize:'1.2rem',color:'var(--danger,#e53e3e)'}}>🔒 Anda tidak memiliki hak akses ke fitur ini.</p></article></section>
-  const filtered = useMemo(()=>pegawai.filter(p=>`${p.nama} ${p.nip_nrp} ${p.pangkat_gol} ${p.jabatan} ${p.unit_kerja}`.toLowerCase().includes(q.toLowerCase()) && (!unit||p.unit_kerja===unit) && (!status||p.status===status) && (!jenis||p.jenis===jenis)),[pegawai,q,unit,status,jenis])
+const filtered = useMemo(() =>
+  pegawai.filter(p =>
+    p.status !== 'Mutasi' &&
+    p.status !== 'Pensiun' &&
+    ${p.nama} ${p.nip_nrp} ${p.pangkat_gol} ${p.jabatan} ${p.unit_kerja}
+      .toLowerCase()
+      .includes(q.toLowerCase()) &&
+    (!unit || p.unit_kerja === unit) &&
+    (!status || p.status === status) &&
+    (!jenis || p.jenis === jenis)
+  ),
+[pegawai,q,unit,status,jenis])
   const stats = { total:pegawai.length, jaksa:pegawai.filter(p=>p.jenis==='Jaksa').length, tu:pegawai.filter(p=>p.jenis==='TU').length, pensiun:pegawai.filter(p=>p.status==='Pensiun').length, mutasi:pegawai.filter(p=>p.status==='Mutasi').length, pangkat:pegawai.filter(p=>p.status==='Naik Pangkat').length }
 
   const ulangTahunBulanIni = pegawai
