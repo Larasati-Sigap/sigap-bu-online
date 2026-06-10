@@ -57,7 +57,7 @@ const filtered = useMemo(() =>
   pegawai.filter(p =>
     p.status !== 'Mutasi' &&
     p.status !== 'Pensiun' &&
-    ${p.nama} ${p.nip_nrp} ${p.pangkat_gol} ${p.jabatan} ${p.unit_kerja}
+    '${p.nama} ${p.nip_nrp} ${p.pangkat_gol} ${p.jabatan} ${p.unit_kerja}'
       .toLowerCase()
       .includes(q.toLowerCase()) &&
     (!unit || p.unit_kerja === unit) &&
