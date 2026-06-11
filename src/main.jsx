@@ -81,7 +81,6 @@ function App(){
     )
   }),
 [pegawai,q,unit,status,jenis])
-[pegawai,q,unit,jenis])
   const dataMutasi = useMemo(() =>
   pegawai.filter(p => p.status === 'Mutasi'),
 [pegawai])
