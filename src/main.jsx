@@ -125,10 +125,22 @@ const dataPensiun = useMemo(() =>
 
   function openNew(){ setEditing(null); setForm(emptyForm); setModal(true) }
   function openEdit(p){ setEditing(p); setForm({...emptyForm,...p,tmt_pangkat:p.tmt_pangkat||'',tmt_jabatan:p.tmt_jabatan||'',tanggal_pensiun:p.tanggal_pensiun||''}); setModal(true) }
-  async function addHistory(pegawai_id,tipe,field,oldValue,newValue,catatan){ await supabase.from('riwayat_perubahan').insert({pegawai_id,tipe,field_diubah:field,nilai_lama:oldValue||'',nilai_baru:newValue||'',catatan:catatan||'',admin_id:session.user.id,admin_nama:profile?.nama||session.user.email}) }
-  async function savePegawai(e){ e.preventDefault(); if(!canEdit)return alert('Akun ini viewer.'); const payload={...form,tmt_pangkat:form.tmt_pangkat||null,tmt_jabatan:form.tmt_jabatan||null,tanggal_pensiun:form.tanggal_pensiun||null}; if(editing){ const {error}=await supabase.from('pegawai').update(payload).eq('id',editing.id); if(error)return alert(error.message); await addHistory(editing.id,'Edit Data Pegawai','status',editing.status,payload.status,form.keterangan) } else { const {data,error}=await supabase.from('pegawai').insert(payload).select().single(); if(error)return alert(error.message); await addHistory(data.id,'Tambah Pegawai','data_pegawai','',payload.status,form.keterangan) } setModal(false) }
+ async function addHistory(pegawai_id,tipe,field,oldValue,newValue,catatan,pegawaiNama=''){
+  await supabase.from('riwayat_perubahan').insert({
+    pegawai_id,
+    tipe,
+    field_diubah:field,
+    nilai_lama:oldValue||'',
+    nilai_baru:newValue||'',
+    catatan:catatan||'',
+    admin_id:session.user.id,
+    admin_nama:profile?.nama||session.user.email,
+    pegawai_nama:pegawaiNama
+  })
+}
+  async function savePegawai(e){ e.preventDefault(); if(!canEdit)return alert('Akun ini viewer.'); const payload={...form,tmt_pangkat:form.tmt_pangkat||null,tmt_jabatan:form.tmt_jabatan||null,tanggal_pensiun:form.tanggal_pensiun||null}; if(editing){ const {error}=await supabase.from('pegawai').update(payload).eq('id',editing.id); if(error)return alert(error.message); await addHistory(editing.id,'Edit Data Pegawai','status',editing.status,payload.status,form.keterangan,payload.nama) } else { const {data,error}=await supabase.from('pegawai').insert(payload).select().single(); if(error)return alert(error.message); await addHistory(data.id,'Tambah Pegawai','data_pegawai','',payload.status,form.keterangan,payload.nama) } setModal(false) }
   async function del(p){ if(profile?.role!=='super_admin')return alert('Hanya super admin.'); if(!confirm(`Hapus ${p.nama}?`))return; const {error}=await supabase.from('pegawai').delete().eq('id',p.id); if(error)return alert(error.message); await addHistory(p.id,'Hapus Data','data_pegawai',p.nama,'','Data dihapus') }
-  async function quickUpdate(e){ e.preventDefault(); const p=pegawai.find(x=>x.id===quick.pegawai_id); if(!p)return alert('Pilih pegawai.'); if(quick.tipe==='Naik Pangkat'&&!quick.jenis)return alert('Pilih jenis pegawai terlebih dahulu.'); if(quick.tipe==='Naik Pangkat'&&!quick.pangkat_gol)return alert('Pilih pangkat/golongan baru.'); let payload={status:quick.tipe,keterangan:quick.catatan}, field='status', old=p.status, neu=quick.tipe; if(quick.tipe==='Naik Pangkat'){payload.pangkat_gol=quick.pangkat_gol;payload.jenis=quick.jenis;payload.tmt_pangkat=quick.tanggal||null;field='pangkat_gol';old=p.pangkat_gol;neu=payload.pangkat_gol} if(quick.tipe==='Mutasi'){payload.unit_kerja=quick.unit_kerja;field='unit_kerja';old=p.unit_kerja;neu=quick.unit_kerja} if(quick.tipe==='Pensiun')payload.tanggal_pensiun=quick.tanggal||null; const {error}=await supabase.from('pegawai').update(payload).eq('id',p.id); if(error)return alert(error.message); await addHistory(p.id,quick.tipe,field,old,neu,quick.catatan); alert('Update berhasil.') }
+  async function quickUpdate(e){ e.preventDefault(); const p=pegawai.find(x=>x.id===quick.pegawai_id); if(!p)return alert('Pilih pegawai.'); if(quick.tipe==='Naik Pangkat'&&!quick.jenis)return alert('Pilih jenis pegawai terlebih dahulu.'); if(quick.tipe==='Naik Pangkat'&&!quick.pangkat_gol)return alert('Pilih pangkat/golongan baru.'); let payload={status:quick.tipe,keterangan:quick.catatan}, field='status', old=p.status, neu=quick.tipe; if(quick.tipe==='Naik Pangkat'){payload.pangkat_gol=quick.pangkat_gol;payload.jenis=quick.jenis;payload.tmt_pangkat=quick.tanggal||null;field='pangkat_gol';old=p.pangkat_gol;neu=payload.pangkat_gol} if(quick.tipe==='Mutasi'){payload.unit_kerja=quick.unit_kerja;field='unit_kerja';old=p.unit_kerja;neu=quick.unit_kerja} if(quick.tipe==='Pensiun')payload.tanggal_pensiun=quick.tanggal||null; const {error}=await supabase.from('pegawai').update(payload).eq('id',p.id); if(error)return alert(error.message); await addHistory(p.id,quick.tipe,field,old,neu,quick.catatan,p.nama); alert('Update berhasil.') }
   function exportCsv(){ const rows=pegawai.map(p=>[p.nama,p.jabatan,p.nip_nrp,p.pangkat_gol,p.unit_kerja,p.sub_unit,p.jenis,p.status,p.keterangan].map(v=>`"${String(v||'').replaceAll('"','""')}"`).join(',')); const blob=new Blob([['Nama,Jabatan,NIP/NRP,Pangkat/Gol,Unit Kerja,Sub Unit,Jenis,Status,Keterangan',...rows].join('\n')],{type:'text/csv'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='sigap-bu-data-pegawai.csv'; a.click() }
   function exportPdf(){
     const doc = new jsPDF({ orientation:'landscape', unit:'mm', format:'a4' })
@@ -450,7 +462,28 @@ const dataPensiun = useMemo(() =>
 
 function Kpi({icon,label,value}){return <article className="kpi"><div className="kpiIcon">{icon}</div><span>{label}</span><strong>{value}</strong><small>Database pusat</small></article>}
 function Title({title,sub}){return <div className="panelTitle"><h3>{title}</h3><p>{sub}</p></div>}
-function History({items}){if(!items.length)return <p className="note">Belum ada riwayat perubahan.</p>;return <div className="historyList">{items.map(h=><div className="historyItem" key={h.id}><div className="historyIcon">↻</div><div><strong>{h.tipe}</strong><small>{new Date(h.created_at).toLocaleString('id-ID')} · {h.admin_nama||'-'}</small><p>{h.nilai_lama||'-'} → {h.nilai_baru||'-'} {h.catatan?`· ${h.catatan}`:''}</p></div></div>)}</div>}
+function History({items}){
+  if(!items.length)return <p className="note">Belum ada riwayat perubahan.</p>;
+  return <div className="historyList">
+    {items.map(h=>(
+      <div className="historyItem" key={h.id}>
+        <div className="historyIcon">↻</div>
+        <div>
+          <strong>{h.tipe}</strong>
+          <small>
+            {h.pegawai_nama ? `${h.pegawai_nama} · ` : ''}
+            {new Date(h.created_at).toLocaleString('id-ID')} · {h.admin_nama||'-'}
+          </small>
+          <p>
+            {h.field_diubah ? `${h.field_diubah}: ` : ''}
+            {h.nilai_lama||'-'} → {h.nilai_baru||'-'}
+            {h.catatan?` · Catatan: ${h.catatan}`:''}
+          </p>
+        </div>
+      </div>
+    ))}
+  </div>
+}
 
 createRoot(document.getElementById('root')).render(<App/>)
 // sort pegawai by urutan pangkat
