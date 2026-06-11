@@ -51,20 +51,35 @@ function App(){
   const isSuperAdmin = role === 'super_admin'
   const isAdminUp = isSuperAdmin || role === 'admin_bagian'
   const canEdit = isAdminUp
-  const ACCESS = { dashboard:true, pegawai:true, update:isAdminUp, riwayat:isAdminUp, backup:isSuperAdmin, users:isSuperAdmin }
+  const ACCESS = {
+  dashboard:true,
+  pegawai:true,
+  update:isAdminUp,
+  mutasi:isAdminUp,
+  pensiun:isAdminUp,
+  riwayat:isAdminUp,
+  backup:isSuperAdmin,
+  users:isSuperAdmin
+}
   const AccessDenied = ()=><section className="view"><article className="panel" style={{textAlign:'center',padding:'3rem'}}><p style={{fontSize:'1.2rem',color:'var(--danger,#e53e3e)'}}>🔒 Anda tidak memiliki hak akses ke fitur ini.</p></article></section>
-const filtered = useMemo(() =>
+  const filtered = useMemo(() =>
   pegawai.filter(p =>
     p.status !== 'Mutasi' &&
     p.status !== 'Pensiun' &&
-    '${p.nama} ${p.nip_nrp} ${p.pangkat_gol} ${p.jabatan} ${p.unit_kerja}'
+    ${p.nama} ${p.nip_nrp} ${p.pangkat_gol} ${p.jabatan} ${p.unit_kerja}
       .toLowerCase()
       .includes(q.toLowerCase()) &&
     (!unit || p.unit_kerja === unit) &&
-    (!status || p.status === status) &&
     (!jenis || p.jenis === jenis)
   ),
-[pegawai,q,unit,status,jenis])
+[pegawai,q,unit,jenis])
+  const dataMutasi = useMemo(() =>
+  pegawai.filter(p => p.status === 'Mutasi'),
+[pegawai])
+
+const dataPensiun = useMemo(() =>
+  pegawai.filter(p => p.status === 'Pensiun'),
+[pegawai])
   const stats = { total:pegawai.length, jaksa:pegawai.filter(p=>p.jenis==='Jaksa').length, tu:pegawai.filter(p=>p.jenis==='TU').length, pensiun:pegawai.filter(p=>p.status==='Pensiun').length, mutasi:pegawai.filter(p=>p.status==='Mutasi').length, pangkat:pegawai.filter(p=>p.status==='Naik Pangkat').length }
 
   const ulangTahunBulanIni = pegawai
@@ -147,7 +162,7 @@ const filtered = useMemo(() =>
           </div>
         </div>
         <p className="navTitle">NAVIGATION</p>
-        {[['dashboard',Activity,'Dashboard'],['pegawai',Users,'Data Pegawai'],['update',RotateCcw,'Update Pegawai'],['riwayat',ClipboardList,'Audit Trail'],['backup',Database,'Backup'],['users',Users,'Manajemen User']].filter(([key])=>ACCESS[key]).map(([key,Icon,label])=><button key={key} className={`navItem ${active===key?'active':''}`} onClick={()=>setActive(key)}><Icon size={18}/>{label}</button>)}
+        {[['dashboard',Activity,'Dashboard'],['pegawai',Users,'Data Pegawai'],['update',RotateCcw,'Update Pegawai'],['mutasi',RotateCcw,'Mutasi'],['pensiun',Database,'Pensiun'],['riwayat',ClipboardList,'Audit Trail'],['backup',Database,'Backup'],['users',Users,'Manajemen User']].filter(([key])=>ACCESS[key]).map(([key,Icon,label])=><button key={key} className={`navItem ${active===key?'active':''}`} onClick={()=>setActive(key)}><Icon size={18}/>{label}</button>)}
         <button className="btn outline logout" onClick={()=>supabase.auth.signOut()}><LogOut size={16}/>Keluar</button>
       </aside>
       <main className="main">
