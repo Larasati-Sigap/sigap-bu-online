@@ -64,7 +64,15 @@ function App(){
   const AccessDenied = ()=><section className="view"><article className="panel" style={{textAlign:'center',padding:'3rem'}}><p style={{fontSize:'1.2rem',color:'var(--danger,#e53e3e)'}}>🔒 Anda tidak memiliki hak akses ke fitur ini.</p></article></section>
   const filtered = useMemo(() =>
   pegawai.filter(p => {
-    const keyword = `${p.nama || ''} ${p.nip_nrp || ''} ${p.pangkat_gol || ''} ${p.jabatan || ''} ${p.unit_kerja || ''}`.toLowerCase()
+    const keyword = [
+      p.nama,
+      p.nip_nrp,
+      p.pangkat_gol,
+      p.jabatan,
+      p.unit_kerja
+    ]
+      .join(' ')
+      .toLowerCase()
 
     const unitFilter = unit && unit !== 'Semua Bagian'
     const statusFilter = status && status !== 'Semua Status'
