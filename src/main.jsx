@@ -479,6 +479,15 @@ function History({items}){
             {h.nilai_lama||'-'} → {h.nilai_baru||'-'}
             {h.catatan?` · Catatan: ${h.catatan}`:''}
           </p>
+          {h.tipe !== 'UNDO' && (
+  <button
+    className="btn outline"
+    onClick={() => undoHistory(h)}
+    style={{marginTop:'8px'}}
+  >
+    Undo
+  </button>
+)}
         </div>
       </div>
     ))}
