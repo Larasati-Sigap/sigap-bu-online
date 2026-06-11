@@ -63,15 +63,24 @@ function App(){
 }
   const AccessDenied = ()=><section className="view"><article className="panel" style={{textAlign:'center',padding:'3rem'}}><p style={{fontSize:'1.2rem',color:'var(--danger,#e53e3e)'}}>🔒 Anda tidak memiliki hak akses ke fitur ini.</p></article></section>
   const filtered = useMemo(() =>
-  pegawai.filter(p =>
-    p.status !== 'Mutasi' &&
-    p.status !== 'Pensiun' &&
-    '${p.nama} ${p.nip_nrp} ${p.pangkat_gol} ${p.jabatan} ${p.unit_kerja}'
+  pegawai.filter(p => {
+    const keyword = '${p.nama || ''} ${p.nip_nrp || ''} ${p.pangkat_gol || ''} ${p.jabatan || ''} ${p.unit_kerja || ''}'
       .toLowerCase()
-      .includes(q.toLowerCase()) &&
-    (!unit || p.unit_kerja === unit) &&
-    (!jenis || p.jenis === jenis)
-  ),
+
+    const unitFilter = unit && unit !== 'Semua Bagian'
+    const statusFilter = status && status !== 'Semua Status'
+    const jenisFilter = jenis && jenis !== 'Jaksa/TU'
+
+    return (
+      p.status !== 'Mutasi' &&
+      p.status !== 'Pensiun' &&
+      keyword.includes(q.toLowerCase()) &&
+      (!unitFilter || p.unit_kerja === unit) &&
+      (!statusFilter || p.status === status) &&
+      (!jenisFilter || p.jenis === jenis)
+    )
+  }),
+[pegawai,q,unit,status,jenis])
 [pegawai,q,unit,jenis])
   const dataMutasi = useMemo(() =>
   pegawai.filter(p => p.status === 'Mutasi'),
