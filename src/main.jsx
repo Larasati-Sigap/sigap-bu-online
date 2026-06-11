@@ -332,7 +332,23 @@ const dataPensiun = useMemo(() =>
             </article>
           </section>
         ))}
+{active==='mutasi'&&(
+  <section className="view">
+    <article className="panel">
+      <Title title="Data Mutasi" sub="Pegawai yang dimutasi"/>
+      <p>Total: {dataMutasi.length} pegawai</p>
+    </article>
+  </section>
+)}
 
+{active==='pensiun'&&(
+  <section className="view">
+    <article className="panel">
+      <Title title="Data Pensiun" sub="Pegawai yang pensiun"/>
+      <p>Total: {dataPensiun.length} pegawai</p>
+    </article>
+  </section>
+)}
         {active==='riwayat'&&(!ACCESS.riwayat?<AccessDenied/>:(
           <section className="view">
             <article className="panel">
