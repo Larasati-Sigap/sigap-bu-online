@@ -96,13 +96,7 @@ const dataMutasi = useMemo(() =>
 const dataPensiun = useMemo(() =>
   pegawai.filter(p => p.status === 'Pensiun'),
 [pegawai])
-  const dataMutasi = useMemo(() =>
-  pegawai.filter(p => p.status === 'Mutasi'),
-[pegawai])
-
-const dataPensiun = useMemo(() =>
-  pegawai.filter(p => p.status === 'Pensiun'),
-[pegawai])
+  
   const stats = { total:pegawai.length, jaksa:pegawai.filter(p=>p.jenis==='Jaksa').length, tu:pegawai.filter(p=>p.jenis==='TU').length, pensiun:pegawai.filter(p=>p.status==='Pensiun').length, mutasi:pegawai.filter(p=>p.status==='Mutasi').length, pangkat:pegawai.filter(p=>p.status==='Naik Pangkat').length }
 
   const ulangTahunBulanIni = pegawai
