@@ -382,7 +382,7 @@ const dataPensiun = useMemo(() =>
           <section className="view">
             <article className="panel">
               <Title title="Audit Trail" sub="Siapa mengubah, kapan, dan apa yang berubah."/>
-              <History items={history}/>
+              <History items={history} onUndo= {undoHistory}/>
             </article>
           </section>
         ))}
@@ -462,7 +462,7 @@ const dataPensiun = useMemo(() =>
 
 function Kpi({icon,label,value}){return <article className="kpi"><div className="kpiIcon">{icon}</div><span>{label}</span><strong>{value}</strong><small>Database pusat</small></article>}
 function Title({title,sub}){return <div className="panelTitle"><h3>{title}</h3><p>{sub}</p></div>}
-function History({items}){
+function History({items,onUndo}){
   if(!items.length)return <p className="note">Belum ada riwayat perubahan.</p>;
   return <div className="historyList">
     {items.map(h=>(
@@ -482,7 +482,7 @@ function History({items}){
           {h.tipe !== 'UNDO' && (
   <button
     className="btn outline"
-    onClick={() => undoHistory(h)}
+    onClick={() => onUndo(h)}
     style={{marginTop:'8px'}}
   >
     Undo
