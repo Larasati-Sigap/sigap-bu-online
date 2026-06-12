@@ -479,7 +479,7 @@ function History({items,onUndo}){
             {h.nilai_lama||'-'} → {h.nilai_baru||'-'}
             {h.catatan?` · Catatan: ${h.catatan}`:''}
           </p>
-          {h.tipe !== 'UNDO' && (
+         {h.tipe !== 'UNDO' && onUndo && (
   <button
     className="btn outline"
     onClick={() => onUndo(h)}
