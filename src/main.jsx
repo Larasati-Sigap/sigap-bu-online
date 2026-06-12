@@ -138,6 +138,46 @@ const dataPensiun = useMemo(() =>
     pegawai_nama:pegawaiNama
   })
 }
+  async function undoHistory(h){
+  if(!confirm('Undo perubahan ini?')) return
+
+  const payload = {
+    [h.field_diubah]: h.nilai_lama
+  }
+
+  if(h.tipe === 'Mutasi'){
+    payload.status = 'Aktif'
+  }
+
+  if(h.tipe === 'Pensiun'){
+    payload.status = 'Aktif'
+  }
+
+  const { error } = await supabase
+    .from('pegawai')
+    .update(payload)
+    .eq('id', h.pegawai_id)
+
+  if(error){
+    alert(error.message)
+    return
+  }
+
+  await addHistory(
+    h.pegawai_id,
+    'UNDO',
+    h.field_diubah,
+    h.nilai_baru,
+    h.nilai_lama,
+    'Rollback data',
+    h.pegawai_nama
+  )
+
+  await loadPegawai()
+  await loadHistory()
+
+  alert('Undo berhasil')
+}
   async function savePegawai(e){ e.preventDefault(); if(!canEdit)return alert('Akun ini viewer.'); const payload={...form,tmt_pangkat:form.tmt_pangkat||null,tmt_jabatan:form.tmt_jabatan||null,tanggal_pensiun:form.tanggal_pensiun||null}; if(editing){ const {error}=await supabase.from('pegawai').update(payload).eq('id',editing.id); if(error)return alert(error.message); await addHistory(editing.id,'Edit Data Pegawai','status',editing.status,payload.status,form.keterangan,payload.nama) } else { const {data,error}=await supabase.from('pegawai').insert(payload).select().single(); if(error)return alert(error.message); await addHistory(data.id,'Tambah Pegawai','data_pegawai','',payload.status,form.keterangan,payload.nama) } setModal(false) }
   async function del(p){ if(profile?.role!=='super_admin')return alert('Hanya super admin.'); if(!confirm(`Hapus ${p.nama}?`))return; const {error}=await supabase.from('pegawai').delete().eq('id',p.id); if(error)return alert(error.message); await addHistory(p.id,'Hapus Data','data_pegawai',p.nama,'','Data dihapus') }
   async function quickUpdate(e){ e.preventDefault(); const p=pegawai.find(x=>x.id===quick.pegawai_id); if(!p)return alert('Pilih pegawai.'); if(quick.tipe==='Naik Pangkat'&&!quick.jenis)return alert('Pilih jenis pegawai terlebih dahulu.'); if(quick.tipe==='Naik Pangkat'&&!quick.pangkat_gol)return alert('Pilih pangkat/golongan baru.'); let payload={status:quick.tipe,keterangan:quick.catatan}, field='status', old=p.status, neu=quick.tipe; if(quick.tipe==='Naik Pangkat'){payload.pangkat_gol=quick.pangkat_gol;payload.jenis=quick.jenis;payload.tmt_pangkat=quick.tanggal||null;field='pangkat_gol';old=p.pangkat_gol;neu=payload.pangkat_gol} if(quick.tipe==='Mutasi'){payload.unit_kerja=quick.unit_kerja;field='unit_kerja';old=p.unit_kerja;neu=quick.unit_kerja} if(quick.tipe==='Pensiun')payload.tanggal_pensiun=quick.tanggal||null; const {error}=await supabase.from('pegawai').update(payload).eq('id',p.id); if(error)return alert(error.message); await addHistory(p.id,quick.tipe,field,old,neu,quick.catatan,p.nama); alert('Update berhasil.') }
