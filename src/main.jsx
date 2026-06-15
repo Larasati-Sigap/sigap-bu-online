@@ -115,7 +115,17 @@ const dataPensiun = useMemo(() =>
   const pegawaiAktif = pegawai.filter(
   p => p.status !== 'Mutasi' && p.status !== 'Pensiun'
 )
-    const unitCounts = Object.entries(
+ const unitBiroUmum = [
+  'Keamanan Dalam',
+  'Sarana, Prasarana & Rumah Tangga',
+  'Protokol & Pengamanan Pimpinan',
+  'Tata Usaha Pimpinan',
+  'Tata Usaha & Kearsipan',
+  'Asisten Khusus Jaksa Agung',
+  'Asisten Umum Jaksa Agung'
+]
+
+const unitCounts = Object.entries(
   pegawaiAktif.reduce((a,p)=>{
     if(unitBiroUmum.includes(p.unit_kerja)){
       a[p.unit_kerja]=(a[p.unit_kerja]||0)+1
