@@ -107,7 +107,19 @@ const dataPensiun = useMemo(() =>
   mutasi: pegawai.filter(p=>p.status==='Mutasi').length,
   pangkat: pegawaiAktif.filter(p=>p.status==='Naik Pangkat').length
 }
+const pensiunSatuTahun = pegawaiAktif
+  .filter(p => {
+    if (!p.tanggal_pensiun) return false
 
+    const today = new Date()
+    const target = new Date()
+    target.setFullYear(today.getFullYear() + 1)
+
+    const tglPensiun = new Date(p.tanggal_pensiun)
+
+    return tglPensiun >= today && tglPensiun <= target
+  })
+  .sort((a,b) => new Date(a.tanggal_pensiun) - new Date(b.tanggal_pensiun))
   const ulangTahunBulanIni = pegawai
     .filter(p => {
       if (!p.tanggal_lahir) return false
@@ -290,6 +302,24 @@ const dataPensiun = useMemo(() =>
               </article>
             </div>
             <article className="panel">
+              <article className="panel">
+  <Title title="⚠️ Menjelang Pensiun" sub="Pegawai yang akan pensiun dalam 1 tahun."/>
+  {pensiunSatuTahun.length === 0 ? (
+    <p className="note">Tidak ada pegawai yang akan pensiun dalam 1 tahun.</p>
+  ) : (
+    <div className="historyList">
+      {pensiunSatuTahun.slice(0,5).map(p => (
+        <div key={p.id} className="historyItem">
+          <div className="historyIcon">⚠️</div>
+          <div>
+            <strong>{p.nama}</strong>
+            <small>{p.jabatan || '-'} · Pensiun: {new Date(p.tanggal_pensiun).toLocaleDateString('id-ID')}</small>
+          </div>
+        </div>
+      ))}
+    </div>
+  )}
+</article>
               <Title title="🎂 Ulang Tahun Pegawai" sub="Monitoring ulang tahun pegawai."/>
               {ulangTahunHariIni.length > 0 && (
                 <div className="alert">
