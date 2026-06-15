@@ -481,10 +481,10 @@ const pensiunSatuTahun = pegawaiAktif
               <Title title="Update Naik Pangkat / Mutasi / Pensiun" sub="Setiap perubahan masuk audit trail."/>
               <form className="updateGrid" onSubmit={quickUpdate}>
                 <label>Pilih Pegawai
-                  <select value={quick.pegawai_id} onChange={e=>setQuick({...quick,pegawai_id:e.target.value})} required>
-                    <option value="">Pilih pegawai</option>
-                    {pegawai.map(p=><option value={p.id} key={p.id}>{p.nama} — {p.jabatan}</option>)}
-                  </select>
+                  : <select value={quick.unit_kerja} onChange={e=>setQuick({...quick,unit_kerja:e.target.value})}>
+    {quick.tipe === 'Aktif' && <option value="Biro Umum">Biro Umum</option>}
+    {units.map(u=><option key={u}>{u}</option>)}
+  </select>
                 </label>
                 <label>Jenis Update
                   <select value={quick.tipe} onChange={e=>setQuick({...quick,tipe:e.target.value,jenis:'',pangkat_gol:''})}>
@@ -512,8 +512,17 @@ const pensiunSatuTahun = pegawaiAktif
                   {quick.tipe==='Mutasi'
                     ? <select value={quick.unit_kerja} onChange={e=>setQuick({...quick,unit_kerja:e.target.value})}>
                         <option value="">Pilih satker</option>
-                        {satker.map(s=><option key={s.nama_satker} value={s.nama_satker}>{s.nama_satker} - {s.jenis} - {s.provinsi}</option>)}
+                       <option value="">Pilih satker</option>
+<option value="__MANUAL__">Kejaksaan Agung / Unit kerja manual</option>
+{satker.map(s=><option key={s.nama_satker} value={s.nama_satker}>{s.nama_satker} - {s.jenis} - {s.provinsi}</option>)}
                       </select>
+                    {quick.tipe === 'Mutasi' && quick.unit_kerja === '__MANUAL__' && (
+  <input
+    placeholder="Isi unit kerja tujuan manual"
+    value={quick.unit_manual || ''}
+    onChange={e=>setQuick({...quick,unit_manual:e.target.value})}
+  />
+)}
                     : <select value={quick.unit_kerja} onChange={e=>setQuick({...quick,unit_kerja:e.target.value})}>
                         {units.map(u=><option key={u}>{u}</option>)}
                       </select>
