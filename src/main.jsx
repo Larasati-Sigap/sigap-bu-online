@@ -235,81 +235,54 @@ const pensiunSatuTahun = pegawaiAktif
  function exportPdf(){
   const doc = new jsPDF({ orientation:'landscape', unit:'mm', format:'a4' })
   const now = new Date()
-  const periode = now.toLocaleDateString('id-ID',{month:'long',year:'numeric'})
-  const tglCetak = now.toLocaleDateString('id-ID',{weekday:'long',year:'numeric',month:'long',day:'numeric'})
+  const tgl = now.toLocaleDateString('id-ID',{weekday:'long',year:'numeric',month:'long',day:'numeric'})
   const adminNama = profile?.nama || session.user.email
 
+  doc.setFontSize(14)
   doc.setFont('helvetica','bold')
-  doc.setFontSize(16)
-  doc.text('LAPORAN KEPEGAWAIAN BIRO UMUM', 148, 18, {align:'center'})
+  doc.text('DATA PEGAWAI BIRO UMUM', doc.internal.pageSize.getWidth()/2, 18, {align:'center'})
 
   doc.setFontSize(10)
   doc.setFont('helvetica','normal')
-  doc.text(`SIGAP-BU Online · Periode ${periode}`, 148, 25, {align:'center'})
-  doc.text(`Dicetak oleh: ${adminNama} · ${tglCetak}`, 148, 31, {align:'center'})
+  doc.text('SIGAP-BU Online v3.0', doc.internal.pageSize.getWidth()/2, 25, {align:'center'})
+
+  const cols = ['No','Nama','NIP/NRP','Jabatan','Pangkat/Gol','Unit Kerja','Status']
+  const rows = filtered.map((p,i)=>[
+    i+1,
+    p.nama||'-',
+    p.nip_nrp||'-',
+    p.jabatan||'-',
+    p.pangkat_gol||'-',
+    p.unit_kerja||'-',
+    p.status||'-'
+  ])
 
   autoTable(doc,{
-    startY:40,
-    head:[['Ringkasan','Jumlah']],
-    body:[
-      ['Total Pegawai Aktif', stats.total],
-      ['Jaksa', stats.jaksa],
-      ['Tata Usaha', stats.tu],
-      ['Mutasi', stats.mutasi],
-      ['Pensiun', stats.pensiun],
-      ['Naik Pangkat', stats.pangkat]
-    ],
-    styles:{fontSize:9, cellPadding:3},
-    headStyles:{fillColor:[30,58,138], textColor:255}
-  })
-
-  autoTable(doc,{
-    startY:90,
-    head:[['Bagian','Jumlah Pegawai Aktif']],
-    body:unitCounts.map(([u,c])=>[u,c]),
+    head:[cols],
+    body:rows,
+    startY:30,
     styles:{fontSize:8, cellPadding:2},
-    headStyles:{fillColor:[30,58,138], textColor:255}
+    headStyles:{fillColor:[30,58,138], textColor:255, fontStyle:'bold'},
+    alternateRowStyles:{fillColor:[239,246,255]},
+    columnStyles:{
+      0:{cellWidth:10,halign:'center'},
+      1:{cellWidth:45},
+      2:{cellWidth:30},
+      3:{cellWidth:40},
+      4:{cellWidth:25},
+      5:{cellWidth:55},
+      6:{cellWidth:22}
+    },
+    didDrawPage:(data)=>{
+      const pageCount = doc.internal.getNumberOfPages()
+      doc.setFontSize(8)
+      doc.setFont('helvetica','normal')
+      doc.text(`Dicetak: ${tgl} · Admin: ${adminNama}`, 14, doc.internal.pageSize.getHeight()-8)
+      doc.text(`Halaman ${data.pageNumber} dari ${pageCount}`, doc.internal.pageSize.getWidth()-14, doc.internal.pageSize.getHeight()-8, {align:'right'})
+    }
   })
 
-  autoTable(doc,{
-    startY:40,
-    margin:{left:150},
-    head:[['Menjelang Pensiun','Jabatan','Tanggal']],
-    body:pensiunSatuTahun.slice(0,8).map(p=>[
-      p.nama || '-',
-      p.jabatan || '-',
-      p.tanggal_pensiun ? new Date(p.tanggal_pensiun).toLocaleDateString('id-ID') : '-'
-    ]),
-    styles:{fontSize:8, cellPadding:2},
-    headStyles:{fillColor:[180,83,9], textColor:255}
-  })
-
-  autoTable(doc,{
-    startY:105,
-    margin:{left:150},
-    head:[['Naik Pangkat 3 Bulan','Pangkat/Gol','TMT']],
-    body:naikPangkatTigaBulan.slice(0,8).map(p=>[
-      p.nama || '-',
-      p.pangkat_gol || '-',
-      p.tmt_pangkat ? new Date(p.tmt_pangkat).toLocaleDateString('id-ID') : '-'
-    ]),
-    styles:{fontSize:8, cellPadding:2},
-    headStyles:{fillColor:[21,128,61], textColor:255}
-  })
-
-  autoTable(doc,{
-    startY:155,
-    head:[['Aktivitas Terakhir','Pegawai','Perubahan']],
-    body:history.slice(0,8).map(h=>[
-      h.tipe || '-',
-      h.pegawai_nama || '-',
-      `${h.nilai_lama || '-'} → ${h.nilai_baru || '-'}`
-    ]),
-    styles:{fontSize:8, cellPadding:2},
-    headStyles:{fillColor:[67,56,202], textColor:255}
-  })
-
-  doc.save(`laporan-kepegawaian-sigap-bu-${now.toISOString().slice(0,10)}.pdf`)
+  doc.save(`sigap-bu-pegawai-${now.toISOString().slice(0,10)}.pdf`)
 }
 
   if(loading)return <div className="loading">Memuat SIGAP-BU...</div>
