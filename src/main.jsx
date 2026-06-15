@@ -95,13 +95,13 @@ function App(){
     const jenisFilter = jenis && jenis !== 'Jaksa/TU'
 
     return (
-      p.status !== 'Mutasi' &&
-      p.status !== 'Pensiun' &&
-      keyword.includes(q.toLowerCase()) &&
-      (!unitFilter || p.unit_kerja === unit) &&
-      (!statusFilter || p.status === status) &&
-      (!jenisFilter || p.jenis === jenis)
-    )
+  (p.status || '').trim() !== 'Mutasi' &&
+  (p.status || '').trim() !== 'Pensiun' &&
+  keyword.includes(q.toLowerCase()) &&
+  (!unitFilter || p.unit_kerja === unit) &&
+  (!statusFilter || p.status === status) &&
+  (!jenisFilter || p.jenis === jenis)
+)
   }),
 [pegawai,q,unit,status,jenis])
 
