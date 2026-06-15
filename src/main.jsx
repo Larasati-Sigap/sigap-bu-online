@@ -171,8 +171,23 @@ const pensiunSatuTahun = pegawaiAktif
     )
   })
 
-  const unitCounts = Object.entries(pegawai.reduce((a,p)=>{a[p.unit_kerja]=(a[p.unit_kerja]||0)+1;return a},{})).sort((a,b)=>b[1]-a[1])
-
+  const unitCounts = Object.entries(
+  pegawaiAktif.reduce((a,p)=>{
+    if(unitBiroUmum.includes(p.unit_kerja)){
+      a[p.unit_kerja]=(a[p.unit_kerja]||0)+1
+    }
+    return a
+  },{})
+).sort((a,b)=>b[1]-a[1])
+  const unitBiroUmum = [
+  'Keamanan Dalam',
+  'Sarana, Prasarana & Rumah Tangga',
+  'Protokol & Pengamanan Pimpinan',
+  'Tata Usaha Pimpinan',
+  'Tata Usaha & Kearsipan',
+  'Asisten Khusus Jaksa Agung',
+  'Asisten Umum Jaksa Agung'
+]
   function openNew(){ setEditing(null); setForm(emptyForm); setModal(true) }
   function openEdit(p){ setEditing(p); setForm({...emptyForm,...p,tmt_pangkat:p.tmt_pangkat||'',tmt_jabatan:p.tmt_jabatan||'',tanggal_pensiun:p.tanggal_pensiun||''}); setModal(true) }
  async function addHistory(pegawai_id,tipe,field,oldValue,newValue,catatan,pegawaiNama=''){
