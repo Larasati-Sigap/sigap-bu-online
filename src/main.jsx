@@ -120,6 +120,19 @@ const pensiunSatuTahun = pegawaiAktif
     return tglPensiun >= today && tglPensiun <= target
   })
   .sort((a,b) => new Date(a.tanggal_pensiun) - new Date(b.tanggal_pensiun))
+  const naikPangkatTigaBulan = pegawaiAktif
+  .filter(p => {
+    if (!p.tmt_pangkat) return false
+
+    const today = new Date()
+    const target = new Date()
+    target.setMonth(today.getMonth() + 3)
+
+    const tmtPangkat = new Date(p.tmt_pangkat)
+
+    return tmtPangkat >= today && tmtPangkat <= target
+  })
+  .sort((a,b) => new Date(a.tmt_pangkat) - new Date(b.tmt_pangkat))
   const ulangTahunBulanIni = pegawai
     .filter(p => {
       if (!p.tanggal_lahir) return false
@@ -314,6 +327,24 @@ const pensiunSatuTahun = pegawaiAktif
           <div>
             <strong>{p.nama}</strong>
             <small>{p.jabatan || '-'} · Pensiun: {new Date(p.tanggal_pensiun).toLocaleDateString('id-ID')}</small>
+          </div>
+        </div>
+      ))}
+    </div>
+  )}
+</article>
+              <article className="panel">
+  <Title title="⬆️ Naik Pangkat" sub="Pegawai dengan TMT pangkat dalam 3 bulan."/>
+  {naikPangkatTigaBulan.length === 0 ? (
+    <p className="note">Tidak ada pegawai naik pangkat dalam 3 bulan.</p>
+  ) : (
+    <div className="historyList">
+      {naikPangkatTigaBulan.slice(0,5).map(p => (
+        <div key={p.id} className="historyItem">
+          <div className="historyIcon">⬆️</div>
+          <div>
+            <strong>{p.nama}</strong>
+            <small>{p.pangkat_gol || '-'} · TMT: {new Date(p.tmt_pangkat).toLocaleDateString('id-ID')}</small>
           </div>
         </div>
       ))}
