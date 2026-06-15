@@ -115,6 +115,14 @@ const dataPensiun = useMemo(() =>
   const pegawaiAktif = pegawai.filter(
   p => p.status !== 'Mutasi' && p.status !== 'Pensiun'
 )
+    const unitCounts = Object.entries(
+  pegawaiAktif.reduce((a,p)=>{
+    if(unitBiroUmum.includes(p.unit_kerja)){
+      a[p.unit_kerja]=(a[p.unit_kerja]||0)+1
+    }
+    return a
+  },{})
+).sort((a,b)=>b[1]-a[1])
   const stats = {
   total: pegawaiAktif.length,
   jaksa: pegawaiAktif.filter(p=>p.jenis==='Jaksa').length,
@@ -171,14 +179,6 @@ const pensiunSatuTahun = pegawaiAktif
     )
   })
 
-  const unitCounts = Object.entries(
-  pegawaiAktif.reduce((a,p)=>{
-    if(unitBiroUmum.includes(p.unit_kerja)){
-      a[p.unit_kerja]=(a[p.unit_kerja]||0)+1
-    }
-    return a
-  },{})
-).sort((a,b)=>b[1]-a[1])
   const unitBiroUmum = [
   'Keamanan Dalam',
   'Sarana, Prasarana & Rumah Tangga',
