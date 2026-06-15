@@ -27,7 +27,16 @@ function App(){
   const [users,setUsers]=useState([])
   const [satker,setSatker]=useState([])
   useEffect(()=>{ supabase.auth.getSession().then(({data})=>{setSession(data.session);setLoading(false)}); const {data}=supabase.auth.onAuthStateChange((_e,s)=>setSession(s)); return()=>data.subscription.unsubscribe() },[])
-  useEffect(()=>{ if(!session)return; loadAll(); const ch=supabase.channel('sigap-realtime').on('postgres_changes',{event:'*',schema:'public',table:'pegawai'},loadPegawai).on('postgres_changes',{event:'*',schema:'public',table:'riwayat_perubahan'},loadHistory).subscribe(); return()=>supabase.removeChannel(ch) },[session])
+  useEffect(()=>{ if(!session)return; loadAll(); const ch = supabase.channel('sigap-realtime')
+  .on('postgres_changes',{event:'*',schema:'public',table:'pegawai'},()=>{
+    loadPegawai()
+  })
+  .on('postgres_changes',{event:'*',schema:'public',table:'riwayat_perubahan'},()=>{
+    loadHistory()
+  })
+  .subscribe();
+
+return()=>supabase.removeChannel(ch),[session])
 
   async function loadSatker(){
     const {data}=await supabase
