@@ -513,26 +513,30 @@ const pensiunSatuTahun = pegawaiAktif
                     </select>
                   </label>
                 )}
-                <label>Unit Baru
-                  {quick.tipe==='Mutasi'
-                    ? <select value={quick.unit_kerja} onChange={e=>setQuick({...quick,unit_kerja:e.target.value})}>
-                        <option value="">Pilih satker</option>
-                       <option value="">Pilih satker</option>
-<option value="__MANUAL__">Kejaksaan Agung / Unit kerja manual</option>
-{satker.map(s=><option key={s.nama_satker} value={s.nama_satker}>{s.nama_satker} - {s.jenis} - {s.provinsi}</option>)}
-                      </select>
-                    {quick.tipe === 'Mutasi' && quick.unit_kerja === '__MANUAL__' && (
-  <input
-    placeholder="Isi unit kerja tujuan manual"
-    value={quick.unit_manual || ''}
-    onChange={e=>setQuick({...quick,unit_manual:e.target.value})}
-  />
-)}
-                    : <select value={quick.unit_kerja} onChange={e=>setQuick({...quick,unit_kerja:e.target.value})}>
-                        {units.map(u=><option key={u}>{u}</option>)}
-                      </select>
-                  }
-                </label>
+               <label>Unit Baru
+  {quick.tipe === 'Mutasi' ? (
+    <>
+      <select value={quick.unit_kerja} onChange={e=>setQuick({...quick,unit_kerja:e.target.value})}>
+        <option value="">Pilih satker</option>
+        <option value="__MANUAL__">Kejaksaan Agung / Unit kerja manual</option>
+        {satker.map(s=><option key={s.nama_satker} value={s.nama_satker}>{s.nama_satker} - {s.jenis} - {s.provinsi}</option>)}
+      </select>
+
+      {quick.unit_kerja === '__MANUAL__' && (
+        <input
+          placeholder="Isi unit kerja tujuan manual"
+          value={quick.unit_manual || ''}
+          onChange={e=>setQuick({...quick,unit_manual:e.target.value})}
+        />
+      )}
+    </>
+  ) : (
+    <select value={quick.unit_kerja} onChange={e=>setQuick({...quick,unit_kerja:e.target.value})}>
+      {quick.tipe === 'Aktif' && <option value="Biro Umum">Biro Umum</option>}
+      {units.map(u=><option key={u}>{u}</option>)}
+    </select>
+  )}
+</label>
                 <label>Tanggal/TMT
                   <input type="date" value={quick.tanggal} onChange={e=>setQuick({...quick,tanggal:e.target.value})}/>
                 </label>
