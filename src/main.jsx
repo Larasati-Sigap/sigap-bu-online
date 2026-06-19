@@ -540,12 +540,20 @@ const pensiunSatuTahun = pegawaiAktif
             <article className="panel">
               <Title title="Update Naik Pangkat / Mutasi / Pensiun" sub="Setiap perubahan masuk audit trail."/>
               <form className="updateGrid" onSubmit={quickUpdate}>
-                <label>Pilih Pegawai
-                  : <select value={quick.unit_kerja} onChange={e=>setQuick({...quick,unit_kerja:e.target.value})}>
-    {quick.tipe === 'Aktif' && <option value="Biro Umum">Biro Umum</option>}
-    {units.map(u=><option key={u}>{u}</option>)}
+               <label>Pilih Pegawai
+  <select
+    value={quick.pegawai_id}
+    onChange={e=>setQuick({...quick,pegawai_id:e.target.value})}
+    required
+  >
+    <option value="">Pilih pegawai</option>
+    {pegawai.map(p=>(
+      <option value={p.id} key={p.id}>
+        {p.nama} — {p.jabatan || '-'}
+      </option>
+    ))}
   </select>
-                </label>
+</label>
                 <label>Jenis Update
                   <select value={quick.tipe} onChange={e=>setQuick({...quick,tipe:e.target.value,jenis:'',pangkat_gol:''})}>
                     <option>Naik Pangkat</option><option>Mutasi</option><option>Pensiun</option><option>Aktif</option>
