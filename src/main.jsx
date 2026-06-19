@@ -397,7 +397,15 @@ const pensiunSatuTahun = pegawaiAktif
           <div className="heroActions">
             <button className="btn glass" onClick={exportCsv}><Download size={16}/>Export CSV</button>
             {isSuperAdmin&&<button className="btn glass" onClick={exportPdf}><FileText size={16}/>Export PDF</button>}
-            {isSuperAdmin&&<button className="btn gold" onClick={openNew}><Plus size={16}/>Tambah Pegawai</button>}
+            {canEdit &&
+  <button
+    className="btn gold"
+    onClick={openNew}
+  >
+    <Plus size={16}/>
+    Tambah Pegawai
+  </button>
+}
           </div>
         </header>
 
