@@ -249,8 +249,13 @@ const pensiunSatuTahun = pegawaiAktif
   async function quickUpdate(e){
   e.preventDefault();
 
-  const p = pegawai.find(x=>x.id===quick.pegawai_id)
-  if(!p) return alert('Pilih pegawai.')
+ if(quick.tipe === 'Tambah Pegawai Baru'){
+  openNew()
+  return
+}
+
+const p = pegawai.find(x=>x.id===quick.pegawai_id)
+if(!p) return alert('Pilih pegawai.')
 
   let payload = {
     status: quick.tipe,
