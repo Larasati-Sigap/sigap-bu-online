@@ -67,6 +67,9 @@ function App(){
   const isSuperAdmin = role === 'super_admin'
   const isAdminUp = isSuperAdmin || role === 'admin_bagian'
   const canEdit = isAdminUp
+  const pegawaiByRole = isSuperAdmin
+  ? pegawai
+  : pegawai.filter(p => p.unit_kerja === profile?.unit_kerja)
   const ACCESS = {
   dashboard:true,
   pegawai:true,
@@ -79,7 +82,7 @@ function App(){
 }
   const AccessDenied = ()=><section className="view"><article className="panel" style={{textAlign:'center',padding:'3rem'}}><p style={{fontSize:'1.2rem',color:'var(--danger,#e53e3e)'}}>🔒 Anda tidak memiliki hak akses ke fitur ini.</p></article></section>
   const filtered = useMemo(() =>
-  pegawai.filter(p => {
+  pegawaiByRole.filter(p => {
     const keyword = [
       p.nama,
       p.nip_nrp,
@@ -103,16 +106,16 @@ function App(){
   (!jenisFilter || p.jenis === jenis)
 )
   }),
-[pegawai,q,unit,status,jenis])
+[pegawaiByRole,q,unit,status,jenis])
 
 const dataMutasi = useMemo(() =>
-  pegawai.filter(p => p.status === 'Mutasi'),
+  pegawaiByRole.filter(p => p.status === 'Mutasi'),
 [pegawai])
 
 const dataPensiun = useMemo(() =>
   pegawai.filter(p => p.status === 'Pensiun'),
 [pegawai])
-  const pegawaiAktif = pegawai.filter(
+  const pegawaiAktif = pegawaiByRole.filter(
   p => p.status !== 'Mutasi' && p.status !== 'Pensiun'
 )
  const unitBiroUmum = [
