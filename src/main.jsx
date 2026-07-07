@@ -694,35 +694,55 @@ if(!p) return alert('Pilih pegawai.')
                 <div><p className="eyebrow blue">Form Pegawai</p><h3>{editing?'Edit Pegawai':'Tambah Pegawai'}</h3></div>
                 <button type="button" className="xBtn" onClick={()=>setModal(false)}>×</button>
               </div>
-              <div className="formGrid">
-                {['nama','nip_nrp','pangkat_gol','jabatan','sub_unit'].map(k=>(
-                  <label key={k}>{k.replaceAll('_',' ').toUpperCase()}<input value={form[k]||''} onChange={e=>setForm({...form,[k]:e.target.value})} required={k==='nama'||k==='nip_nrp'}/></label>
-                ))}
-                <label>Bagian<select value={form.unit_kerja} onChange={e=>setForm({...form,unit_kerja:e.target.value})}>{units.map(u=><option key={u}>{u}</option>)}</select></label>
-                <label>Jenis<select value={form.jenis} onChange={e=>setForm({...form,jenis:e.target.value})}><option>Jaksa</option><option>TU</option></select></label>
-                <label>Status<select value={form.status} onChange={e=>setForm({...form,status:e.target.value})}><option>Aktif</option><option>Naik Pangkat</option><option>Mutasi</option><option>Pensiun</option></select></label>
-                <label>
-                  Tanggal Lahir
-                  <input
-                    type="date"
-                    value={form.tanggal_lahir || ''}
-                    onChange={e=>setForm({...form,tanggal_lahir:e.target.value})}
-                  />
-                </label>
-                <label>TMT Pangkat<input type="date" value={form.tmt_pangkat||''} onChange={e=>setForm({...form,tmt_pangkat:e.target.value})}/></label>
-                <label>TMT Jabatan<input type="date" value={form.tmt_jabatan||''} onChange={e=>setForm({...form,tmt_jabatan:e.target.value})}/></label>
-                <label>Tanggal Pensiun<input type="date" value={form.tanggal_pensiun||''} onChange={e=>setForm({...form,tanggal_pensiun:e.target.value})}/></label>
-                <label className="fullRow">Keterangan<textarea value={form.keterangan||''} onChange={e=>setForm({...form,keterangan:e.target.value})}/></label>
-              </div>
-              <div className="modalActions">
-                <button type="button" className="btn outline" onClick={()=>setModal(false)}>Batal</button>
-                <button className="btn primary"><Save size={16}/>Simpan</button>
-              </div>
-            </form>
-          </div>
-        )}
-      </main>
-    </div>
+             <div className="formGrid">
+  {['nama','nip_nrp','pangkat_gol','jabatan'].map(k=>(
+    <label key={k}>
+      {k.replaceAll('_',' ').toUpperCase()}
+      <input
+        value={form[k]||''}
+        onChange={e=>setForm({...form,[k]:e.target.value})}
+        required={k==='nama'||k==='nip_nrp'}
+      />
+    </label>
+  ))}
+
+  <label>Bagian
+    <select value={form.unit_kerja} onChange={e=>setForm({...form,unit_kerja:e.target.value})}>
+      {units.map(u=><option key={u}>{u}</option>)}
+    </select>
+  </label>
+
+  <label>Jenis
+    <select value={form.jenis} onChange={e=>setForm({...form,jenis:e.target.value})}>
+      <option>Jaksa</option>
+      <option>TU</option>
+    </select>
+  </label>
+
+  <label>Status
+    <select value={form.status} onChange={e=>setForm({...form,status:e.target.value})}>
+      <option>Aktif</option>
+      <option>Naik Pangkat</option>
+      <option>Mutasi</option>
+      <option>Pensiun</option>
+    </select>
+  </label>
+
+  <label>Tanggal Lahir
+    <input
+      type="date"
+      value={form.tanggal_lahir || ''}
+      onChange={e=>setForm({...form,tanggal_lahir:e.target.value})}
+    />
+  </label>
+
+  <label className="fullRow">Keterangan
+    <textarea
+      value={form.keterangan||''}
+      onChange={e=>setForm({...form,keterangan:e.target.value})}
+    />
+  </label>
+</div>
   )
 }
 
